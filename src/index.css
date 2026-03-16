@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #e9f1f7;
+  background:
+    radial-gradient(circle at top, rgba(102, 174, 255, 0.14), transparent 26%),
+    radial-gradient(circle at 85% 20%, rgba(255, 164, 76, 0.12), transparent 22%),
+    linear-gradient(145deg, #050b14 0%, #091423 38%, #050a12 100%);
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(102, 174, 255, 0.14), transparent 26%),
+    radial-gradient(circle at 85% 20%, rgba(255, 164, 76, 0.12), transparent 22%),
+    linear-gradient(145deg, #050b14 0%, #091423 38%, #050a12 100%);
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.panel-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.glass {
+  background:
+    linear-gradient(180deg, rgba(9, 18, 32, 0.78), rgba(5, 12, 22, 0.9)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  backdrop-filter: blur(20px);
+}
+
+.hud-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.06), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(93, 173, 255, 0.08), transparent 28%);
+  pointer-events: none;
+}
+
+.hud-shell::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(201, 216, 233, 0.25);
+  border-radius: 999px;
+}
+
+.aurora-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.aurora-sheen::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.12) 50%, transparent 70%);
+  transform: translateX(-50%) rotate(12deg);
+  animation: sheen 7s linear infinite;
+  pointer-events: none;
+}
+
+.dashboard-enter {
+  animation: dashboardEnter 0.65s ease-out both;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(45px);
+  opacity: 0.45;
+  animation: floatOrb 10s ease-in-out infinite;
+}
+
+.signal-line {
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.7) 12%, transparent 24%) 0 0 / 200% 100%,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+  animation: scanLine 2.8s linear infinite;
+}
+
+@keyframes sheen {
+  from {
+    transform: translateX(-65%) rotate(12deg);
+  }
+  to {
+    transform: translateX(65%) rotate(12deg);
+  }
+}
+
+@keyframes dashboardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatOrb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10px, -18px, 0) scale(1.08);
+  }
+}
+
+@keyframes scanLine {
+  from {
+    background-position: 200% 0, 0 0;
+  }
+  to {
+    background-position: -20% 0, 0 0;
+  }
+}
