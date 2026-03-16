@@ -1,6 +1,40 @@
 import csvRaw from "../../aurora_project_cities_dataset.csv?raw";
+import solaraLandscape from "../../solara-landscape.png";
+import solaraStreetview from "../../solara-streetview.png";
+import frostaraLandscape from "../../frostara-landscape.png";
+import frostaraStreetview from "../../frostara-streetview.png";
+import verdantiaLandscape from "../../verdantia-landscape.png";
+import verdantiaStreetview from "../../verdantia-streetview.png";
 import type { CityData, CitySlug, ClimateMetric, CsvCityRow, DashboardMetric } from "../types";
 import { cityThemes } from "./logos";
+
+const missionBriefAssets: Record<
+  CitySlug,
+  {
+    hero: string;
+    street: string;
+    text: string;
+  }
+> = {
+  solara: {
+    hero: solaraLandscape,
+    street: solaraStreetview,
+    text:
+      "Solara sits in a dry valley where heat and water scarcity shape everyday life. Summers are long and intense, and the city must carefully manage its water system. Many neighborhoods grew quickly without much planning. Roads are crowded, buildings trap heat, and energy demand rises during the hottest months. Solara has huge potential for solar energy, but the city still struggles with waste, transportation, and water efficiency.",
+  },
+  frostara: {
+    hero: frostaraLandscape,
+    street: frostaraStreetview,
+    text:
+      "Frostara lies between steep mountains and a cold coastline. Strong winds and long cold seasons make life harder for buildings, infrastructure, and transport. The harbor is the heart of the city, supporting fishing and industry, but these activities also affect air quality and nearby ecosystems. Energy is essential here, because heating buildings and maintaining infrastructure in a cold climate requires reliable power.",
+  },
+  verdantia: {
+    hero: verdantiaLandscape,
+    street: verdantiaStreetview,
+    text:
+      "Verdantia grew inside one of the most biodiverse rainforest regions on the planet. Dense jungle surrounds the city, and rivers carry life through the valley. Rapid growth has pushed the city deeper into the forest. Roads, industry, and housing now compete with fragile ecosystems. Waste management, biodiversity protection, and water quality are major challenges in this environment.",
+  },
+};
 
 const parseCsv = (csv: string): CsvCityRow[] => {
   const rows: string[][] = [];
@@ -90,6 +124,7 @@ const slugFromCity = (city: string): CitySlug => city.toLowerCase() as CitySlug;
 const normalizeCity = (row: CsvCityRow): CityData => {
   const slug = slugFromCity(row.city);
   const theme = cityThemes[slug];
+  const missionBrief = missionBriefAssets[slug];
 
   const raw = {
     climateStress: toInt(row.climate_stress),
@@ -111,6 +146,9 @@ const normalizeCity = (row: CsvCityRow): CityData => {
     slug,
     biome: row.biome,
     tagline: row.tagline,
+    missionBriefHeroImage: missionBrief.hero,
+    missionBriefStreetImage: missionBrief.street,
+    missionBriefText: missionBrief.text,
     themeColor: row.theme_color,
     accentSoft: theme.secondary,
     glowColor: theme.glow,

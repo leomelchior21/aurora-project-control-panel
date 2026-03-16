@@ -1,11 +1,11 @@
 import type { CitySlug } from "../types";
 
-export type DashboardLayer = "home" | "climate" | "water" | "air" | "energy" | "mobility" | "waste" | "biodiversity" | "compare";
+export type DashboardLayer = "mission_brief" | "overview" | "climate" | "water" | "air" | "energy" | "mobility" | "waste" | "biodiversity";
 
 type XYPoint = { label: string; value: number };
 
 export interface LayerConfig {
-  home: {
+  overview: {
     environmentalTrend: XYPoint[];
     pressureMix: XYPoint[];
     opportunityScores: XYPoint[];
@@ -60,7 +60,7 @@ export interface LayerConfig {
 
 export const cityLayerConfigs: Record<CitySlug, LayerConfig> = {
   solara: {
-    home: {
+    overview: {
       environmentalTrend: [
         { label: "Heat", value: 93 },
         { label: "Water", value: 91 },
@@ -225,7 +225,7 @@ export const cityLayerConfigs: Record<CitySlug, LayerConfig> = {
     },
   },
   frostara: {
-    home: {
+    overview: {
       environmentalTrend: [
         { label: "Cold", value: 72 },
         { label: "Wind", value: 81 },
@@ -390,7 +390,7 @@ export const cityLayerConfigs: Record<CitySlug, LayerConfig> = {
     },
   },
   verdantia: {
-    home: {
+    overview: {
       environmentalTrend: [
         { label: "Rain", value: 92 },
         { label: "Humidity", value: 94 },

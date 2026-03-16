@@ -12,7 +12,8 @@ interface CityDashboardProps {
 }
 
 const layers: Array<{ id: DashboardLayer; label: string; icon: string; nodeId?: string }> = [
-  { id: "home", label: "Home", icon: "grid", nodeId: "energy" },
+  { id: "mission_brief", label: "Mission Brief", icon: "brief", nodeId: "energy" },
+  { id: "overview", label: "City Overview", icon: "grid", nodeId: "energy" },
   { id: "climate", label: "Climate", icon: "sun", nodeId: "energy" },
   { id: "water", label: "Water", icon: "drop", nodeId: "water" },
   { id: "air", label: "Air", icon: "air", nodeId: "housing" },
@@ -20,7 +21,6 @@ const layers: Array<{ id: DashboardLayer; label: string; icon: string; nodeId?: 
   { id: "mobility", label: "Mobility", icon: "route", nodeId: "mobility" },
   { id: "waste", label: "Waste", icon: "waste", nodeId: "housing" },
   { id: "biodiversity", label: "Biodiversity", icon: "leaf", nodeId: "biodiversity" },
-  { id: "compare", label: "Compare", icon: "compare" },
 ];
 
 function metricById(city: CityData, id: DashboardMetric["id"]) {
@@ -145,6 +145,13 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
           <path d="M12 3c3 4 5 6.5 5 9.4A5 5 0 1 1 7 12.4C7 9.5 9 7 12 3Z" />
         </svg>
       );
+    case "brief":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="M7 4h10a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" />
+          <path d="M9 8h6M9 12h6" />
+        </svg>
+      );
     case "bolt":
       return (
         <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
@@ -182,12 +189,6 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
           <path d="M12 21v-8" />
           <path d="M7 13c0-4 4-7 10-8 0 6-3 10-7 10-1.7 0-3-.7-3-2Z" />
           <path d="M12 12c0-3-2-5-6-6 0 4 2 7 5 7" />
-        </svg>
-      );
-    case "compare":
-      return (
-        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <path d="M6 18h4V8H6v10ZM14 18h4V4h-4v14Z" />
         </svg>
       );
     default:
@@ -865,30 +866,118 @@ function CompareMetricCard({
   );
 }
 
-function CompareLayer({ cities }: { cities: CityData[] }) {
-  const ids: DashboardMetric["id"][] = [
-    "climate_stress",
-    "water_pressure",
-    "energy_potential",
-    "ecosystem_sensitivity",
-    "mobility_complexity",
+function MissionBriefLayer({ city }: { city: CityData }) {
+  const systemDescriptions = [
+    { title: "Climate", text: "Shows how local weather affects the city - heat, rain, wind, and humidity." },
+    { title: "Water", text: "Shows how the city collects, stores, and distributes water." },
+    { title: "Air", text: "Shows pollution levels and air quality across the city." },
+    { title: "Energy", text: "Shows how the city produces and uses electricity." },
+    { title: "Mobility", text: "Shows how people move through the city." },
+    { title: "Waste", text: "Shows how the city manages garbage and recycling." },
+    { title: "Biodiversity", text: "Shows how the city interacts with surrounding ecosystems." },
   ];
 
   return (
+    <div className="grid gap-6 pb-6">
+      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/55">
+        <img src={city.missionBriefHeroImage} alt={`${city.city} landscape`} className="h-[320px] w-full object-cover md:h-[420px]" />
+      </section>
+
+      <section className="grid gap-4 rounded-[28px] border border-white/10 bg-slate-950/55 p-6">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Mission Brief</p>
+          <h2 className="mt-2 text-[clamp(1.6rem,2.6vw,2.4rem)] font-semibold text-white">{city.city}</h2>
+          <p className="mt-4 max-w-4xl text-[15px] leading-8 text-slate-200 md:text-lg">{city.missionBriefText}</p>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/55">
+        <img src={city.missionBriefStreetImage} alt={`${city.city} street view`} className="h-[300px] w-full object-cover md:h-[380px]" />
+      </section>
+
+      <section className="rounded-[28px] border border-white/10 bg-slate-950/55 p-6">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">City Guide</p>
+        <h3 className="mt-2 text-[clamp(1.3rem,2vw,1.8rem)] font-semibold text-white">What Each System Means</h3>
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {systemDescriptions.map((item) => (
+            <article key={item.title} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-5">
+              <h4 className="text-lg font-semibold text-white">{item.title}</h4>
+              <p className="mt-3 text-sm leading-7 text-slate-300">{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function OverviewLayer({
+  city,
+  cities,
+  layerConfig,
+  theme,
+  activeNodeId,
+  onNodeChange,
+}: {
+  city: CityData;
+  cities: CityData[];
+  layerConfig: (typeof cityLayerConfigs)[CitySlug];
+  theme: (typeof cityThemes)[CitySlug];
+  activeNodeId: string;
+  onNodeChange: (nodeId: string) => void;
+}) {
+  const comparisonIds: DashboardMetric["id"][] = ["climate_stress", "water_pressure", "energy_potential"];
+
+  return (
     <div className="grid gap-3">
-      <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-5">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Compare</p>
-        <h2 className="mt-1 text-[clamp(1.2rem,2vw,1.5rem)] font-semibold text-white">City-to-city comparison</h2>
-      </div>
-      <div className="grid gap-3">
-        {ids.map((id) => (
+      <section className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr_0.85fr]">
+        <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-5">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">City Overview</p>
+          <h2 className="mt-1 text-[clamp(1.3rem,2.2vw,1.8rem)] font-semibold text-white">{city.city} at a glance</h2>
+          <p className="mt-3 text-sm leading-7 text-slate-300">{city.tagline}</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {layerConfig.overview.snapshot.map((item) => (
+              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                <p className="mt-2 text-sm text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <RingSummary title="City pressure index" value={city.cityPressureIndex} color={theme.primary} subtitle="Main challenge" />
+        <HorizontalBars data={layerConfig.overview.opportunityScores} title="Top leverage points" subtitle="Opportunities" color={theme.secondary} />
+      </section>
+
+      <section className="grid gap-3 xl:grid-cols-[1fr_1fr_0.9fr]">
+        <MultiToneRing
+          data={layerConfig.overview.environmentalTrend}
+          colors={[theme.primary, theme.secondary, "#fbbf24", "#38bdf8"]}
+          title="System snapshot"
+          subtitle="Mixed conditions"
+        />
+        <HorizontalBars data={layerConfig.overview.pressureMix} title="City load balance" subtitle="Overview signals" color={theme.secondary} />
+        <TextStack title="Top tensions" subtitle="What to watch" items={layerConfig.overview.topTensions} />
+      </section>
+
+      <section className="grid gap-3">
+        <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-5">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Cross-city context</p>
+          <h3 className="mt-1 text-[clamp(1.1rem,1.8vw,1.4rem)] font-semibold text-white">How {city.city} compares</h3>
+        </div>
+        {comparisonIds.map((id) => (
           <CompareMetricCard
             key={id}
             data={cities.map((entry) => ({ label: entry.city, value: metricById(entry, id).value, color: entry.themeColor }))}
             title={metricById(cities[0], id).label}
           />
         ))}
-      </div>
+      </section>
+
+      <section className="grid gap-3">
+        <div className="min-h-[360px]">
+          <SystemDependencyMap city={city} activeNodeId={activeNodeId} onNodeChange={onNodeChange} />
+        </div>
+      </section>
     </div>
   );
 }
@@ -946,7 +1035,14 @@ function bottomCardsForLayer(city: CityData, layerConfig: (typeof cityLayerConfi
         { label: "Habitat stress", value: `${layerConfig.biodiversity.habitatPressure[1]?.value ?? 0}`, note: layerConfig.biodiversity.preservation[1]?.value ?? "Habitat edges need careful attention.", tone: "warning" as const },
         { label: "Linked systems", value: `${layerConfig.biodiversity.linkedSystems.length}`, note: layerConfig.biodiversity.linkedSystems.join(", "), tone: "neutral" as const },
       ];
-    case "compare":
+    case "mission_brief":
+      return [
+        { label: "Biome", value: city.biome, note: "This is the main environmental setting for the city.", tone: "neutral" as const },
+        { label: "Top challenge", value: city.primaryRisk, note: city.secondaryRisk, tone: "warning" as const },
+        { label: "Best opportunity", value: city.activeSystem.name, note: city.activeSystem.opportunity, tone: "positive" as const },
+        { label: "City pressure", value: `${city.cityPressureIndex}`, note: "A quick signal for how difficult planning may feel here.", tone: "neutral" as const },
+      ];
+    case "overview":
       return [
         { label: "Cities", value: `${3}`, note: "Solara, Frostara and Verdantia stay aligned here.", tone: "neutral" as const },
         { label: "Shared metrics", value: `${5}`, note: "The same five top signals are compared side by side.", tone: "positive" as const },
@@ -966,7 +1062,7 @@ function bottomCardsForLayer(city: CityData, layerConfig: (typeof cityLayerConfi
 export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashboardProps) {
   const theme = cityThemes[city.slug];
   const layerConfig = cityLayerConfigs[city.slug];
-  const [activeLayer, setActiveLayer] = useState<DashboardLayer>("home");
+  const [activeLayer, setActiveLayer] = useState<DashboardLayer>("mission_brief");
   const [activeNodeId, setActiveNodeId] = useState("energy");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -994,8 +1090,10 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
 
   const renderMainLayer = () => {
     switch (activeLayer) {
-      case "compare":
-        return <CompareLayer cities={cities} />;
+      case "mission_brief":
+        return <MissionBriefLayer city={city} />;
+      case "overview":
+        return <OverviewLayer city={city} cities={cities} layerConfig={layerConfig} theme={theme} activeNodeId={activeNodeId} onNodeChange={setActiveNodeId} />;
       case "climate":
         return <ClimatePanel city={city} metrics={city.climateMetrics} color={theme.primary} />;
       case "water":
@@ -1055,44 +1153,7 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
           </div>
         );
       default:
-        return (
-          <div className="grid gap-3">
-            <section className="grid gap-3 xl:grid-cols-[1.05fr_0.95fr_0.9fr]">
-              <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-5">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">City overview</p>
-                <h2 className="mt-1 text-[clamp(1.2rem,2vw,1.6rem)] font-semibold text-white">{city.city}</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{city.tagline}</p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  {layerConfig.home.snapshot.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
-                      <p className="mt-2 text-sm text-white">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <RingSummary title="City pressure index" value={city.cityPressureIndex} color={theme.primary} subtitle="Overall challenge" />
-              <HorizontalBars data={layerConfig.home.opportunityScores} title="Opportunities" subtitle="Best leverage points" color={theme.secondary} />
-            </section>
-
-            <section className="grid gap-3 xl:grid-cols-[1fr_1fr_0.85fr]">
-              <MultiToneRing
-                data={layerConfig.home.environmentalTrend}
-                colors={[theme.primary, theme.secondary, "#fbbf24", "#38bdf8"]}
-                title="Environmental profile"
-                subtitle="Mixed trend"
-              />
-              <HorizontalBars data={layerConfig.home.pressureMix} title="City load balance" subtitle="Pressure mix" color={theme.secondary} />
-              <TextStack title="Top tensions" subtitle="Watch these" items={layerConfig.home.topTensions} />
-            </section>
-
-            <section className="grid gap-3">
-              <div className="min-h-[360px]">
-                <SystemDependencyMap city={city} activeNodeId={activeNodeId} onNodeChange={setActiveNodeId} />
-              </div>
-            </section>
-          </div>
-        );
+        return null;
     }
   };
 
@@ -1218,8 +1279,8 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
           </aside>
 
           <main className="scrollbar-thin min-h-0 overflow-auto pr-1">
-            {activeLayer === "home" ? <CompactMetricRow metrics={city.dashboardMetrics} color={theme.primary} /> : null}
-            <div className={`${activeLayer === "home" ? "mt-3" : ""} grid gap-3`}>
+            {activeLayer === "overview" ? <CompactMetricRow metrics={city.dashboardMetrics} color={theme.primary} /> : null}
+            <div className={`${activeLayer === "overview" ? "mt-3" : ""} grid gap-3`}>
               {renderMainLayer()}
             </div>
             <div className="mt-4">

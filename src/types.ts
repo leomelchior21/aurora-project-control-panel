@@ -52,6 +52,9 @@ export interface CityData {
   slug: CitySlug;
   biome: string;
   tagline: string;
+  missionBriefHeroImage: string;
+  missionBriefStreetImage: string;
+  missionBriefText: string;
   themeColor: string;
   accentSoft: string;
   glowColor: string;
