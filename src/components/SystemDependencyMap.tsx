@@ -100,9 +100,10 @@ export function SystemDependencyMap({ city, activeNodeId, onNodeChange }: System
                   y1={fromNode.y}
                   x2={toNode.x}
                   y2={toNode.y}
-                  stroke={linked ? city.themeColor : "rgba(148,163,184,0.22)"}
-                  strokeWidth={linked ? "0.8" : "0.35"}
-                  strokeDasharray="2 1.5"
+                  stroke={linked ? city.themeColor : "rgba(148,163,184,0.15)"}
+                  strokeWidth={linked ? "1.4" : "0.4"}
+                  strokeDasharray={linked ? "3 1.5" : "2 2.5"}
+                  opacity={linked ? 1 : 0.7}
                 />
               );
             })}

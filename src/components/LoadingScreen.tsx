@@ -9,7 +9,9 @@ export function LoadingScreen({ progress }: LoadingScreenProps) {
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="glass flex w-full max-w-xl flex-col items-center gap-8 rounded-[28px] border border-white/10 p-10 shadow-aurora">
         <img src={auroraLogo} alt="Aurora Project logo" className="h-80 w-80 object-contain" />
-        <div className="w-full">
+        <div className="w-full text-center">
+          <p className="mb-1 text-[11px] uppercase tracking-[0.4em] text-slate-500">Aurora Project</p>
+          <p className="mb-5 text-sm text-slate-400">Initializing city systems...</p>
           <div className="mb-3 flex items-center justify-between text-xs uppercase tracking-[0.35em] text-slate-400">
             <span>Loading</span>
             <span>{progress}%</span>

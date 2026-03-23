@@ -202,14 +202,18 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
 
 function MetricTile({ metric, color }: { metric: DashboardMetric; color: string }) {
   return (
-    <div className="rounded-[20px] border border-white/10 bg-slate-950/55 p-4">
+    <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-slate-950/55 p-4">
+      <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-[20px]" style={{ background: `linear-gradient(90deg, ${color}, transparent 70%)` }} />
       <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{metric.label}</p>
       <div className="mt-3 flex items-end justify-between gap-3">
         <p className="text-[clamp(1.6rem,2vw,2.2rem)] font-semibold text-white">
           <AnimatedNumber value={metric.value} />
         </p>
-        <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${metric.value}%`, backgroundColor: color }} />
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-[11px] font-medium" style={{ color }}>{metric.value}%</span>
+          <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${metric.value}%`, background: `linear-gradient(90deg, ${color}88, ${color})` }} />
+          </div>
         </div>
       </div>
     </div>
@@ -247,16 +251,23 @@ function LineChart({ data, color, title, subtitle }: { data: Array<{ label: stri
         </div>
       </div>
       <svg viewBox="0 0 100 100" className="h-44 w-full overflow-visible">
+        <defs>
+          <linearGradient id={`lg-${title.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.38" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.03" />
+          </linearGradient>
+        </defs>
         {ticks.map((tick) => (
           <line key={tick} x1="0" y1={chartHeight - tick} x2="100" y2={chartHeight - tick} stroke="rgba(148,163,184,0.14)" strokeWidth="0.8" />
         ))}
         <line x1="0" y1="100" x2="100" y2="100" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-        <polygon points={area} fill={`${color}20`} />
-        <polyline fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" points={polyline} />
+        <polygon points={area} fill={`url(#lg-${title.replace(/\s+/g, '')})`} />
+        <polyline fill="none" stroke={color} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" points={polyline} />
         {points.map((point) => (
           <g key={point.label}>
             <circle cx={point.x} cy={point.y} r="2.6" fill={color} />
             <circle cx={point.x} cy={point.y} r="5" fill={`${color}25`} />
+            <text x={point.x} y={point.y - 8} textAnchor="middle" fill="rgba(255,255,255,0.75)" fontSize="7" fontWeight="600">{point.value}</text>
           </g>
         ))}
       </svg>
@@ -288,8 +299,8 @@ function HorizontalBars({ data, title, subtitle, color }: { data: Array<{ label:
               <p className="text-sm text-slate-300">{item.label}</p>
               <p className="text-sm font-semibold text-white">{item.value}</p>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.value}%`, backgroundColor: color }} />
+            <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.value}%`, background: `linear-gradient(90deg, ${color}90, ${color})` }} />
             </div>
           </div>
         ))}
@@ -491,7 +502,14 @@ function MultiToneRing({
 
 function RingSummary({ title, value, color, subtitle }: { title: string; value: number; color: string; subtitle: string }) {
   const circumference = 2 * Math.PI * 42;
-  const dashOffset = circumference - (value / 100) * circumference;
+  const targetOffset = circumference - (value / 100) * circumference;
+  const [ringOffset, setRingOffset] = useState(circumference);
+  const gradId = `ring-grad-${title.replace(/\s+/g, '')}`;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setRingOffset(targetOffset), 80);
+    return () => clearTimeout(timer);
+  }, [targetOffset]);
 
   return (
     <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
@@ -499,19 +517,27 @@ function RingSummary({ title, value, color, subtitle }: { title: string; value: 
       <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
       <div className="mt-4 flex items-center gap-4">
         <svg viewBox="0 0 120 120" className="h-28 w-28 shrink-0">
-          <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={color} stopOpacity="0.55" />
+              <stop offset="100%" stopColor={color} />
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
           <circle
             cx="60"
             cy="60"
             r="42"
             fill="none"
-            stroke={color}
+            stroke={`url(#${gradId})`}
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
+            strokeDashoffset={ringOffset}
             transform="rotate(-90 60 60)"
+            style={{ transition: 'stroke-dashoffset 0.85s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
           />
+          <text x="60" y="64" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="8" letterSpacing="1">{Math.round(value)}%</text>
         </svg>
         <div>
           <p className="text-[clamp(1.8rem,2.2vw,2.5rem)] font-semibold text-white">
@@ -531,8 +557,9 @@ function TextStack({ title, subtitle, items }: { title: string; subtitle: string
       <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
       <div className="mt-4 grid gap-3">
         {items.map((item) => (
-          <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-slate-200">
-            {item}
+          <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500" />
+            <span className="text-sm text-slate-200">{item}</span>
           </div>
         ))}
       </div>
@@ -576,24 +603,24 @@ function BottomInsightCards({
       {cards.map((card) => {
         const badgeClass =
           card.tone === "positive"
-            ? "bg-emerald-100 text-emerald-600"
+            ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
             : card.tone === "warning"
-              ? "bg-rose-100 text-rose-500"
-              : "bg-slate-200 text-slate-500";
+              ? "border border-rose-500/30 bg-rose-500/15 text-rose-400"
+              : "border border-slate-500/30 bg-slate-500/15 text-slate-400";
 
         return (
-          <div key={`${card.label}-${card.value}`} className="rounded-[26px] bg-white p-5 text-slate-900 shadow-[0_16px_40px_rgba(15,23,42,0.18)]">
+          <div key={`${card.label}-${card.value}`} className="rounded-[26px] border border-white/10 bg-slate-900/70 p-5 backdrop-blur-sm">
             <div className="flex items-start justify-between gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-slate-300">
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                   {iconForCard(card.label, card.tone)}
                 </svg>
               </div>
               <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${badgeClass}`}>{card.tone ?? "neutral"}</span>
             </div>
-            <p className="mt-5 text-sm font-bold uppercase tracking-[0.18em] text-slate-600">{card.label}</p>
-            <p className="mt-2 text-[clamp(2rem,2.4vw,2.8rem)] font-bold leading-none text-slate-950">{card.value}</p>
-            <p className="mt-3 max-w-[22ch] text-[15px] leading-6 text-slate-600">{card.note}</p>
+            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
+            <p className="mt-2 text-[clamp(1.9rem,2.4vw,2.6rem)] font-bold leading-none text-white">{card.value}</p>
+            <p className="mt-3 max-w-[22ch] text-sm leading-6 text-slate-400">{card.note}</p>
           </div>
         );
       })}
@@ -654,6 +681,17 @@ function ClimatePanel({
                 </text>
               </g>
             ))}
+            <polygon
+              points={metrics.map((metric, index) => {
+                const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
+                const r = 18 + metric.value * 0.56;
+                return `${130 + Math.cos(angle) * r},${130 + Math.sin(angle) * r}`;
+              }).join(' ')}
+              fill={`${color}18`}
+              stroke={`${color}55`}
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
             {metrics.map((metric, index) => {
               const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
               const barRadius = 18 + metric.value * 0.56;
@@ -879,8 +917,13 @@ function MissionBriefLayer({ city }: { city: CityData }) {
 
   return (
     <div className="grid gap-6 pb-6">
-      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/55">
+      <section className="relative overflow-hidden rounded-[28px] border border-white/10">
         <img src={city.missionBriefHeroImage} alt={`${city.city} landscape`} className="h-[320px] w-full object-cover md:h-[420px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+        <div className="absolute bottom-6 left-6 right-6">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">{city.biome}</p>
+          <h2 className="mt-1 font-display text-[clamp(1.8rem,3vw,2.8rem)] text-white drop-shadow-lg">{city.city}</h2>
+        </div>
       </section>
 
       <section className="grid gap-4 rounded-[28px] border border-white/10 bg-slate-950/55 p-6">
@@ -1174,10 +1217,11 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
-            <img src={cityLogos[city.slug]} alt={`${city.city} logo`} className="h-[5.4rem] w-[5.4rem] shrink-0 object-contain" />
+            <img src={cityLogos[city.slug]} alt={`${city.city} logo`} className="h-10 w-10 shrink-0 object-contain" />
             <div className="min-w-0">
               <h1 className="truncate font-display text-[clamp(1.5rem,2.4vw,2rem)] text-white">{city.city}</h1>
-              <p className="truncate text-sm text-slate-300">{city.tagline}</p>
+              <p className="truncate text-sm text-slate-400">{city.tagline}</p>
+              <p className="mt-0.5 text-[11px] uppercase tracking-[0.22em] text-slate-600">{layers.find((l) => l.id === activeLayer)?.label}</p>
             </div>
           </div>
 
