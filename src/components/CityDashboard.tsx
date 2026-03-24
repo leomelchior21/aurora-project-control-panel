@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { CityData, CitySlug, DashboardMetric } from "../types";
 import { cityLogos, cityThemes } from "../data/logos";
 import { cityLayerConfigs, type DashboardLayer } from "../data/cityLayerConfigs";
-import { citySignals, type CityLeveragePoint, type CitySignal, type CityTension } from "../data/citySignals";
+import { citySignals } from "../data/citySignals";
 import { cityInterventions, type Intervention } from "../data/cityInterventions";
 import { SystemDependencyMap } from "./SystemDependencyMap";
 
@@ -29,11 +29,8 @@ type SignalTone = "critical" | "pressure" | "opportunity" | "stability";
 
 const sidebarEntries: SidebarEntry[] = [
   { id: "mission_brief", label: "Mission Brief", icon: "brief", hint: "Start here" },
-  { id: "key_signals", label: "Key Signals", icon: "signal", hint: "What matters most" },
-  { id: "system_map", label: "System Map", icon: "network", hint: "See cause and effect" },
+  { id: "key_signals", label: "City Overview", icon: "signal", hint: "General city information" },
   { id: "explore_systems", label: "Explore Systems", icon: "layers", hint: "Open a city system" },
-  { id: "interventions", label: "Interventions", icon: "wrench", hint: "Choose what to change" },
-  { id: "impact_simulator", label: "Impact Simulator", icon: "sliders", hint: "See what happens next" },
 ];
 
 const systemLayers: Array<{
@@ -390,32 +387,6 @@ function MiniSystemButton({
   );
 }
 
-function ActionPrompt({
-  title,
-  body,
-  buttonLabel,
-  onClick,
-}: {
-  title: string;
-  body: string;
-  buttonLabel: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="rounded-[24px] border border-white/10 bg-slate-950/45 p-4 backdrop-blur-md">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{title}</p>
-      <p className="mt-3 min-h-[72px] text-sm text-slate-200">{body}</p>
-      <button
-        type="button"
-        onClick={onClick}
-        className="mt-4 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
-      >
-        {buttonLabel}
-      </button>
-    </div>
-  );
-}
-
 function CompareRow({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div>
@@ -426,62 +397,6 @@ function CompareRow({ label, value, color }: { label: string; value: number; col
       <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
         <div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }} />
       </div>
-    </div>
-  );
-}
-
-function SignalCard({ tone, signal, onClick }: { tone: SignalTone; signal: CitySignal; onClick: () => void }) {
-  const style = signalStyles[tone];
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-[26px] border p-5 text-left transition hover:-translate-y-1"
-      style={{ borderColor: style.border, background: `linear-gradient(180deg, ${style.bg}, rgba(255,255,255,0.02))` }}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[10px] uppercase tracking-[0.28em]" style={{ color: style.color }}>
-          {style.label}
-        </span>
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-300">
-          {signal.system}
-        </span>
-      </div>
-      <h3 className="mt-4 font-headline text-[clamp(1.4rem,2.2vw,1.9rem)] leading-none text-white">{signal.headline}</h3>
-      <p className="mt-3 text-sm text-slate-300">{signal.detail}</p>
-      <p className="mt-5 text-[11px] uppercase tracking-[0.22em] text-slate-400">Click to investigate this system</p>
-    </button>
-  );
-}
-
-function TensionCard({ tension }: { tension: CityTension }) {
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-center gap-3">
-        <span className="rounded-full border border-rose-400/35 bg-rose-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-rose-200">
-          Tension
-        </span>
-        <h4 className="text-base text-white">
-          {tension.a} vs {tension.b}
-        </h4>
-      </div>
-      <p className="mt-3 text-sm text-slate-300">{tension.description}</p>
-    </div>
-  );
-}
-
-function LeverageCard({ point }: { point: CityLeveragePoint }) {
-  return (
-    <div className="rounded-[22px] border border-emerald-400/15 bg-emerald-400/[0.05] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-emerald-200/80">{point.system}</p>
-          <h4 className="mt-2 text-lg text-white">{point.name}</h4>
-        </div>
-        <span className="font-display text-3xl text-emerald-200">{point.potential}</span>
-      </div>
-      <p className="mt-3 text-sm text-slate-300">{point.why}</p>
     </div>
   );
 }
@@ -591,75 +506,50 @@ function MissionBriefLayer({
   balanceScore: number;
   onNavigate: (layer: DashboardLayer) => void;
 }) {
-  const signals = citySignals[city.slug];
   const overview = cityLayerConfigs[city.slug].overview;
-  const otherCities = cities.filter((entry) => entry.slug !== city.slug);
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
-      <Panel className="overflow-hidden">
-        <div className="relative min-h-[420px] p-6 md:p-8">
-          <img src={city.missionBriefHeroImage} alt={city.city} className="absolute inset-0 h-full w-full object-cover opacity-35" />
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.9),rgba(2,6,23,0.45),rgba(2,6,23,0.9))]" />
-          <div className="relative z-10 flex h-full flex-col justify-between">
-            <div>
-              <SectionEyebrow>Mission Brief</SectionEyebrow>
-              <h2 className="mt-3 max-w-3xl font-headline text-[clamp(2.4rem,5vw,4.8rem)] leading-[0.92] text-white">
-                {city.investigativePrompt}
-              </h2>
-              <p className="mt-4 max-w-2xl text-base text-slate-200">{city.missionBriefText}</p>
+    <div className="grid gap-4">
+      <Panel className="p-6">
+        <SectionTitle title="Mission Brief" subtitle={city.investigativePrompt} />
+        <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+          <div className="grid gap-4">
+            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+              <SectionEyebrow>City Context</SectionEyebrow>
+              <p className="mt-4 text-base leading-7 text-slate-200">{city.missionBriefText}</p>
             </div>
-
             <div className="grid gap-3 md:grid-cols-3">
-              <ActionPrompt
-                title="What is happening?"
-                body={signals.critical.detail}
-                buttonLabel="See key signals"
-                onClick={() => onNavigate("key_signals")}
-              />
-              <ActionPrompt
-                title="Why does it matter?"
-                body={`${signals.pressure.detail} ${city.secondaryRisk}`}
-                buttonLabel="Open system map"
-                onClick={() => onNavigate("system_map")}
-              />
-              <ActionPrompt
-                title="What should I do?"
-                body={`Push ${signals.opportunity.headline.toLowerCase()} first and test the effect before scaling.`}
-                buttonLabel="Try interventions"
-                onClick={() => onNavigate("interventions")}
-              />
+              {overview.snapshot.map((item) => (
+                <div key={item.label} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                  <p className="mt-3 text-sm text-white">{item.value}</p>
+                </div>
+              ))}
             </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => onNavigate("key_signals")}
+                className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
+              >
+                Open city overview
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <img src={city.missionBriefHeroImage} alt={`${city.city} landscape`} className="h-[260px] w-full rounded-[24px] border border-white/10 object-cover" />
+            <img src={city.missionBriefStreetImage} alt={`${city.city} street view`} className="h-[260px] w-full rounded-[24px] border border-white/10 object-cover" />
           </div>
         </div>
       </Panel>
 
-      <div className="grid gap-4">
-        <Panel className="p-6">
-          <SectionEyebrow>Current Read</SectionEyebrow>
-          <div className="mt-4 flex flex-wrap items-center gap-5">
-            <ScoreDial value={balanceScore} label="City Balance Score" tone={balanceScore >= 60 ? "stability" : balanceScore >= 40 ? "pressure" : "critical"} />
-            <div className="min-w-[220px] flex-1">
-              <p className="text-sm text-slate-300">
-                This score answers one question: how hard is it for the city to stay in balance right now?
-              </p>
-              <div className="mt-4 grid gap-3">
-                {overview.snapshot.map((item) => (
-                  <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-3">
-                    <p className="text-[10px] uppercase tracking-[0.26em] text-slate-500">{item.label}</p>
-                    <p className="mt-2 text-base text-white">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Panel>
-
-        <Panel className="p-6">
-          <SectionEyebrow>Compare The Cities</SectionEyebrow>
-          <div className="mt-4 grid gap-4">
-            <CompareRow label={city.city} value={balanceScore} color={city.themeColor} />
-            {otherCities.map((entry) => (
+      <Panel className="p-6">
+        <SectionEyebrow>Quick Reference</SectionEyebrow>
+        <div className="mt-4 flex flex-wrap items-center gap-5">
+          <ScoreDial value={balanceScore} label="City Balance Score" tone={balanceScore >= 60 ? "stability" : balanceScore >= 40 ? "pressure" : "critical"} />
+          <div className="grid flex-1 gap-3 md:grid-cols-3">
+            {cities.map((entry) => (
               <CompareRow
                 key={entry.slug}
                 label={entry.city}
@@ -668,8 +558,8 @@ function MissionBriefLayer({
               />
             ))}
           </div>
-        </Panel>
-      </div>
+        </div>
+      </Panel>
     </div>
   );
 }
@@ -677,55 +567,47 @@ function MissionBriefLayer({
 function KeySignalsLayer({
   city,
   cities,
-  balanceScore,
   onNavigate,
 }: {
   city: CityData;
   cities: CityData[];
-  balanceScore: number;
   onNavigate: (layer: DashboardLayer) => void;
 }) {
-  const signals = citySignals[city.slug];
   const overview = cityLayerConfigs[city.slug].overview;
 
   return (
     <div className="grid gap-4">
       <Panel className="p-6">
         <SectionTitle
-          title="The city is telling you where to look first."
-          subtitle="Signals replace neutral metrics. Each one points to a tension, a reason, and a move you can test."
+          title="City Overview"
+          subtitle="General indicators, environmental profile, and a comparison with the other cities."
         />
-        <div className="grid gap-4 xl:grid-cols-3">
-          <SignalCard tone="critical" signal={signals.critical} onClick={() => onNavigate(signals.critical.system as DashboardLayer)} />
-          <SignalCard tone="pressure" signal={signals.pressure} onClick={() => onNavigate(signals.pressure.system as DashboardLayer)} />
-          <SignalCard tone="opportunity" signal={signals.opportunity} onClick={() => onNavigate(signals.opportunity.system as DashboardLayer)} />
+        <div className="grid gap-4 xl:grid-cols-2">
+          <RelationalChart title="Urban systems" subtitle="Dashboard metrics" items={city.dashboardMetrics.map((metric) => ({ label: metric.label, value: metric.value }))} color={city.themeColor} />
+          <RelationalChart title="Climate profile" subtitle="Climate metrics" items={city.climateMetrics.map((metric) => ({ label: metric.label, value: metric.value }))} color={city.accentSoft} />
         </div>
       </Panel>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Panel className="p-6">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <SectionEyebrow>Top Tensions</SectionEyebrow>
-              <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Where the city is pulling against itself</h3>
-            </div>
-            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-slate-400">
-              Balance score {balanceScore}
-            </span>
-          </div>
+          <SectionEyebrow>Reference Blocks</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Important city information</h3>
           <div className="grid gap-3">
-            {signals.tensions.map((tension) => (
-              <TensionCard key={`${tension.a}-${tension.b}`} tension={tension} />
+            {overview.snapshot.map((item) => (
+              <div key={item.label} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                <p className="mt-3 text-base text-white">{item.value}</p>
+              </div>
             ))}
           </div>
         </Panel>
 
         <Panel className="p-6">
-          <SectionEyebrow>Leverage Points</SectionEyebrow>
-          <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Where one move can change many systems</h3>
+          <SectionEyebrow>City Comparison</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Balance score by city</h3>
           <div className="mt-5 grid gap-3">
-            {signals.leverage_points.map((point) => (
-              <LeverageCard key={point.name} point={point} />
+            {cities.map((entry) => (
+              <CompareRow key={entry.slug} label={entry.city} value={citySignals[entry.slug].resilience_score} color={entry.themeColor} />
             ))}
           </div>
         </Panel>
@@ -733,32 +615,30 @@ function KeySignalsLayer({
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <Panel className="p-6">
-          <SectionEyebrow>Pressure Mix</SectionEyebrow>
-          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">What this city struggles with compared with the others</h3>
+          <SectionEyebrow>Environmental Trend</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">Reference chart</h3>
           <div className="mt-5 grid gap-4">
-            {overview.pressureMix.map((item) => (
+            {overview.environmentalTrend.map((item) => (
               <PressureCompare key={item.label} label={item.label} current={item.value} cities={cities} city={city} />
             ))}
           </div>
         </Panel>
 
         <Panel className="p-6">
-          <SectionEyebrow>Best Next Step</SectionEyebrow>
-          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">You do not need to fix everything at once.</h3>
-          <p className="mt-3 text-sm text-slate-300">
-            Start with the strongest leverage point, then check the system map to see what it touches before you simulate it.
-          </p>
-          <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Recommended first move</p>
-            <p className="mt-3 text-2xl text-white">{signals.leverage_points[0]?.name}</p>
-            <p className="mt-2 text-sm text-slate-300">{signals.leverage_points[0]?.why}</p>
-            <button
-              type="button"
-              onClick={() => onNavigate("impact_simulator")}
-              className="mt-5 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
-            >
-              Simulate this move
-            </button>
+          <SectionEyebrow>Overview Notes</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">Go deeper into the system layers</h3>
+          <p className="mt-3 text-sm text-slate-300">Open any system on the left to inspect charts, linked information, and summary blocks about that layer.</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            {systemLayers.map((system) => (
+              <button
+                key={system.id}
+                type="button"
+                onClick={() => onNavigate(system.id)}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.08]"
+              >
+                {system.label}
+              </button>
+            ))}
           </div>
         </Panel>
       </div>
@@ -769,11 +649,9 @@ function KeySignalsLayer({
 function SystemNarrativeLayer({
   city,
   layer,
-  onNavigate,
 }: {
   city: CityData;
   layer: SystemLayer;
-  onNavigate: (layer: DashboardLayer) => void;
 }) {
   const meta = systemLayers.find((entry) => entry.id === layer) ?? systemLayers[0];
   const config = cityLayerConfigs[city.slug][layer];
@@ -812,29 +690,20 @@ function SystemNarrativeLayer({
   return (
     <div className="grid gap-4">
       <Panel className="p-6">
-        <SectionTitle title={meta.question} subtitle={meta.summary} />
+        <SectionTitle title={`${meta.label} System`} subtitle={meta.summary} />
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
           <div className="rounded-[24px] border p-5" style={{ borderColor: tone.border, background: tone.bg }}>
-            <p className="text-[10px] uppercase tracking-[0.26em]" style={{ color: tone.color }}>
-              System reading
-            </p>
+            <p className="text-[10px] uppercase tracking-[0.26em]" style={{ color: tone.color }}>System reading</p>
             <p className="mt-4 font-display text-[4rem] leading-none text-white">{metricValue}</p>
             <p className="mt-2 text-sm text-slate-300">
               {meta.tone === "opportunity"
                 ? "Higher means this city has more room to turn this system into an advantage."
                 : "Higher means this system is creating more pressure on everyday life."}
             </p>
-            <button
-              type="button"
-              onClick={() => onNavigate("impact_simulator")}
-              className="mt-5 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-black/30"
-            >
-              Test this in the simulator
-            </button>
           </div>
           <RelationalChart
-            title="What is driving this system?"
-            subtitle="These forces pull the system toward pressure or possibility."
+            title={`${meta.label} indicators`}
+            subtitle="Chart"
             items={primarySeries}
             color={tone.color}
           />
@@ -843,8 +712,8 @@ function SystemNarrativeLayer({
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
         <Panel className="p-6">
-          <SectionEyebrow>Why It Matters</SectionEyebrow>
-          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">This system never acts alone.</h3>
+          <SectionEyebrow>Information Table</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">Important notes about this layer</h3>
           <div className="mt-5 grid gap-3">
             {secondarySeries.map((item) => (
               <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
@@ -856,18 +725,16 @@ function SystemNarrativeLayer({
         </Panel>
 
         <Panel className="p-6">
-          <SectionEyebrow>Cause And Effect</SectionEyebrow>
-          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">If this system changes, these systems move with it.</h3>
+          <SectionEyebrow>Related Systems</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">Connected layers</h3>
           <div className="mt-5 grid gap-3">
             {linkedSystems.map((linked) => (
               <div key={linked} className="flex items-start justify-between gap-3 rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
                 <div>
                   <p className="text-sm text-white">{linked}</p>
-                  <p className="mt-1 text-sm text-slate-400">This system is directly affected when {meta.shortLabel.toLowerCase()} improves or fails.</p>
+                  <p className="mt-1 text-sm text-slate-400">This layer is connected to {meta.shortLabel.toLowerCase()} in the city model.</p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-400">
-                  linked
-                </span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-400">linked</span>
               </div>
             ))}
           </div>
@@ -1171,30 +1038,6 @@ function ImpactSimulatorLayer({
   );
 }
 
-function StatusStripCard({
-  tone,
-  title,
-  text,
-  detail,
-}: {
-  tone: SignalTone;
-  title: string;
-  text: string;
-  detail: string;
-}) {
-  const style = signalStyles[tone];
-
-  return (
-    <Panel className="p-4" style={{ background: `linear-gradient(180deg, ${style.bg}, rgba(2,6,23,0.22))` }}>
-      <p className="text-[10px] uppercase tracking-[0.28em]" style={{ color: style.color }}>
-        {title}
-      </p>
-      <h3 className="mt-3 text-xl text-white">{text}</h3>
-      <p className="mt-2 text-sm text-slate-300">{detail}</p>
-    </Panel>
-  );
-}
-
 function SidebarContent({
   activeLayer,
   focusedSystem,
@@ -1306,7 +1149,7 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
       case "mission_brief":
         return <MissionBriefLayer city={city} cities={cities} balanceScore={balanceScore} onNavigate={handleLayerChange} />;
       case "key_signals":
-        return <KeySignalsLayer city={city} cities={cities} balanceScore={balanceScore} onNavigate={handleLayerChange} />;
+        return <KeySignalsLayer city={city} cities={cities} onNavigate={handleLayerChange} />;
       case "system_map":
         return (
           <div className="grid gap-4">
@@ -1348,7 +1191,7 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
       case "impact_simulator":
         return <ImpactSimulatorLayer city={city} selected={selectedInterventions} />;
       default:
-        return <SystemNarrativeLayer city={city} layer={activeLayer as SystemLayer} onNavigate={handleLayerChange} />;
+        return <SystemNarrativeLayer city={city} layer={activeLayer as SystemLayer} />;
     }
   };
 
@@ -1409,13 +1252,10 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 xl:grid-cols-[1.2fr_1.2fr_1.2fr_0.9fr]">
-            <StatusStripCard tone="critical" title="Critical" text={signals.critical.headline} detail={signals.critical.detail} />
-            <StatusStripCard tone="pressure" title="Attention" text={signals.pressure.headline} detail={signals.pressure.detail} />
-            <StatusStripCard tone="opportunity" title="Nominal" text={signals.opportunity.headline} detail={signals.opportunity.detail} />
-            <Panel className="flex items-center justify-center p-4">
-              <ScoreDial value={balanceScore} label="City Balance Score" tone={cityTone} />
-            </Panel>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <StatusPill tone={cityTone} label={`City Balance Score ${balanceScore}`} />
+            <StatusPill tone="stability" label={city.biome} />
+            <StatusPill tone="pressure" label={currentLayerLabel} />
           </div>
         </header>
 
