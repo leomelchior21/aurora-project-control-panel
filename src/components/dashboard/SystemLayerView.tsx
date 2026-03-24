@@ -10,9 +10,8 @@ export function SystemLayerView({ layer }: { layer: SystemLayer }) {
       <section className="aurora-panel rounded-[30px] border border-white/10 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">System Status</p>
-            <h3 className="mt-2 text-2xl text-white">{layer.label}</h3>
-            <p className="mt-3 max-w-3xl text-sm text-slate-300">{layer.state}</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">At A Glance</p>
+            {layer.miniSummary ? <p className="mt-3 max-w-3xl text-sm text-slate-300">{layer.miniSummary}</p> : null}
           </div>
           <StatusBadge status={layer.status} />
         </div>
