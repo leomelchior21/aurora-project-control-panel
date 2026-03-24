@@ -1,10 +1,15 @@
 import type { SystemLayer } from "../../types/city";
+import { getStatusColor } from "../../features/city-dashboard/utils/status";
 import { StatusBadge } from "../ui/StatusBadge";
 import { StatCard } from "./StatCard";
 import { ChartRenderer } from "../charts/ChartRenderer";
 import { AlertCard } from "./AlertCard";
+import { MetricIcon } from "../ui/MetricIcon";
+import { LiveValue } from "../ui/LiveValue";
 
 export function SystemLayerView({ layer }: { layer: SystemLayer }) {
+  const tone = getStatusColor(layer.status);
+
   return (
     <div className="grid gap-4">
       <section className="aurora-panel rounded-[30px] border border-white/10 p-6">
@@ -18,8 +23,13 @@ export function SystemLayerView({ layer }: { layer: SystemLayer }) {
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           {layer.summaryStrip.map((item) => (
             <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{item.label}</p>
-              <p className="mt-2 text-base font-semibold text-white">{item.value}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{item.label}</p>
+                <MetricIcon label={item.label} color={tone} />
+              </div>
+              <p className="mt-3 text-base font-semibold text-white">
+                <LiveValue value={item.value} label={item.label} />
+              </p>
             </div>
           ))}
         </div>
@@ -27,7 +37,7 @@ export function SystemLayerView({ layer }: { layer: SystemLayer }) {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {layer.stats.map((stat) => (
-          <StatCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} />
+          <StatCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} color={tone} />
         ))}
       </section>
 

@@ -2,20 +2,14 @@ import { useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { cityMap } from "../data/cities/index";
-import type { CitySlug, LayerKey, SystemStatus } from "../types/city";
+import { cityCollection, cityMap } from "../data/cities/index";
+import type { CitySlug, LayerKey } from "../types/city";
 import { SidebarNav } from "../components/navigation/SidebarNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
 import { MissionBriefView } from "../components/mission-brief/MissionBriefView";
 import { SystemLayerView } from "../components/dashboard/SystemLayerView";
 import { cn } from "../lib/utils";
 import { useState } from "react";
-
-function overallStatus(statuses: SystemStatus[]): SystemStatus {
-  if (statuses.includes("critical")) return "critical";
-  if (statuses.includes("attention")) return "attention";
-  return "nominal";
-}
 
 export function CityPage() {
   const { slug } = useParams<{ slug: CitySlug }>();
@@ -35,7 +29,12 @@ export function CityPage() {
   }
 
   const layer = city.layers.find((item) => item.key === activeLayer);
-  const cityStatus = overallStatus(city.layers.map((entry) => entry.status));
+  const handleSwitchCity = () => {
+    const currentIndex = cityCollection.findIndex((entry) => entry.slug === city.slug);
+    const nextCity = cityCollection[(currentIndex + 1) % cityCollection.length];
+    navigate(`/city/${nextCity.slug}${activeLayer === "mission-brief" ? "" : `#${activeLayer}`}`);
+    setNavOpen(false);
+  };
 
   const handleSelectLayer = (nextLayer: LayerKey) => {
     navigate(`/city/${city.slug}${nextLayer === "mission-brief" ? "" : `#${nextLayer}`}`);
@@ -55,9 +54,9 @@ export function CityPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[270px_minmax(0,1fr)]">
           <div className="hidden lg:block">
-            <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} overallStatus={cityStatus} />
+            <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSwitchCity={handleSwitchCity} />
           </div>
 
           <AnimatePresence>
@@ -69,7 +68,7 @@ export function CityPage() {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} overallStatus={cityStatus} />
+                  <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSwitchCity={handleSwitchCity} />
                 </motion.div>
               </motion.div>
             ) : null}
