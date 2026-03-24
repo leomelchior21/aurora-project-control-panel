@@ -1353,8 +1353,8 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
   };
 
   return (
-    <div className="min-h-screen overflow-hidden p-3">
-      <div className="dashboard-shell aurora-grid mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1780px] grid-rows-[auto_1fr] rounded-[32px] border border-white/10 p-3 shadow-aurora">
+    <div className="min-h-screen overflow-x-hidden p-3">
+      <div className="dashboard-shell aurora-grid mx-auto max-w-[1780px] rounded-[32px] border border-white/10 p-3 shadow-aurora lg:grid lg:min-h-[calc(100vh-1.5rem)] lg:grid-rows-[auto_1fr]">
         <header className="rounded-[28px] border border-white/10 bg-slate-950/40 px-4 py-4 md:px-6">
           <div className="flex flex-wrap items-start gap-4">
             <button
@@ -1427,11 +1427,11 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
           </div>
         ) : null}
 
-        <div className="grid min-h-0 gap-4 pt-4 lg:grid-cols-[290px_minmax(0,1fr)]">
+        <div className="grid gap-4 pt-4 lg:min-h-0 lg:grid-cols-[290px_minmax(0,1fr)]">
           <aside className="hidden min-h-0 lg:block">
             <SidebarContent activeLayer={activeLayer} focusedSystem={focusedSystem} onSelectLayer={handleLayerChange} />
           </aside>
-          <main className="scrollbar-thin min-h-0 overflow-auto pr-1">{renderActiveLayer()}</main>
+          <main className="scrollbar-thin pr-1 lg:min-h-0 lg:overflow-auto">{renderActiveLayer()}</main>
         </div>
       </div>
     </div>
