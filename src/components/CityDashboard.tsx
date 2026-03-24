@@ -1410,9 +1410,9 @@ export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashbo
           </div>
 
           <div className="mt-5 grid gap-3 xl:grid-cols-[1.2fr_1.2fr_1.2fr_0.9fr]">
-            <StatusStripCard tone="critical" title="Critical issue" text={signals.critical.headline} detail={signals.critical.detail} />
-            <StatusStripCard tone="pressure" title="Main pressure" text={signals.pressure.headline} detail={signals.pressure.detail} />
-            <StatusStripCard tone="opportunity" title="Best opportunity" text={signals.opportunity.headline} detail={signals.opportunity.detail} />
+            <StatusStripCard tone="critical" title="Critical" text={signals.critical.headline} detail={signals.critical.detail} />
+            <StatusStripCard tone="pressure" title="Attention" text={signals.pressure.headline} detail={signals.pressure.detail} />
+            <StatusStripCard tone="opportunity" title="Nominal" text={signals.opportunity.headline} detail={signals.opportunity.detail} />
             <Panel className="flex items-center justify-center p-4">
               <ScoreDial value={balanceScore} label="City Balance Score" tone={cityTone} />
             </Panel>
