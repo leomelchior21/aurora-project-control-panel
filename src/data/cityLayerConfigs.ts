@@ -1,6 +1,18 @@
 import type { CitySlug } from "../types";
 
-export type DashboardLayer = "mission_brief" | "overview" | "climate" | "water" | "air" | "energy" | "mobility" | "waste" | "biodiversity";
+export type DashboardLayer =
+  | "mission_brief"
+  | "key_signals"
+  | "system_map"
+  | "climate"
+  | "water"
+  | "air"
+  | "energy"
+  | "mobility"
+  | "waste"
+  | "biodiversity"
+  | "interventions"
+  | "impact_simulator";
 
 type XYPoint = { label: string; value: number };
 

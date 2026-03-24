@@ -12,6 +12,7 @@ declare const _default: {
             };
             fontFamily: {
                 display: [string, string, string];
+                headline: [string, string, string, string];
                 body: [string, string, string];
             };
             keyframes: {

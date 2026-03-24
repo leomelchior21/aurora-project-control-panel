@@ -11,8 +11,9 @@ export default {
                 flare: "#f4c76c",
             },
             fontFamily: {
-                display: ['"Trebuchet MS"', '"Gill Sans"', "sans-serif"],
-                body: ['"Segoe UI"', '"Trebuchet MS"', "sans-serif"],
+                display: ['"Bebas Neue"', '"Arial Narrow"', "sans-serif"],
+                headline: ['"Monument Extended"', '"Space Grotesk"', '"Segoe UI"', "sans-serif"],
+                body: ['"Space Grotesk"', '"Segoe UI"', "sans-serif"],
             },
             keyframes: {
                 pulseGlow: {

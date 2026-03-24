@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,10 +7,11 @@
 :root {
   color: #e9f1f7;
   background:
-    radial-gradient(circle at top, rgba(102, 174, 255, 0.14), transparent 26%),
-    radial-gradient(circle at 85% 20%, rgba(255, 164, 76, 0.12), transparent 22%),
-    linear-gradient(145deg, #050b14 0%, #091423 38%, #050a12 100%);
-  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+    radial-gradient(circle at top, rgba(82, 186, 255, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(255, 183, 77, 0.12), transparent 22%),
+    radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.08), transparent 18%),
+    linear-gradient(145deg, #040915 0%, #07111d 38%, #050810 100%);
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color-scheme: dark;
 }
 
@@ -21,9 +24,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top, rgba(102, 174, 255, 0.14), transparent 26%),
-    radial-gradient(circle at 85% 20%, rgba(255, 164, 76, 0.12), transparent 22%),
-    linear-gradient(145deg, #050b14 0%, #091423 38%, #050a12 100%);
+    radial-gradient(circle at top, rgba(82, 186, 255, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(255, 183, 77, 0.12), transparent 22%),
+    radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.08), transparent 18%),
+    linear-gradient(145deg, #040915 0%, #07111d 38%, #050810 100%);
   overflow: hidden;
 }
 
@@ -43,6 +47,83 @@ body {
     linear-gradient(180deg, rgba(9, 18, 32, 0.78), rgba(5, 12, 22, 0.9)),
     linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
   backdrop-filter: blur(20px);
+}
+
+.dashboard-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(10, 18, 32, 0.9), rgba(5, 10, 19, 0.96)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 36%);
+  backdrop-filter: blur(24px);
+}
+
+.dashboard-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.06), transparent 20%),
+    radial-gradient(circle at 86% 24%, rgba(91, 192, 255, 0.08), transparent 22%);
+}
+
+.aurora-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.aurora-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(9, 16, 30, 0.86), rgba(5, 10, 20, 0.92)),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.03), transparent 38%);
+  backdrop-filter: blur(18px);
+}
+
+.aurora-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.06), transparent 24%);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  padding: 1px;
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+.aurora-range {
+  appearance: none;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.aurora-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, #f8fafc, #94a3b8);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+}
+
+.aurora-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, #f8fafc, #94a3b8);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
 }
 
 .hud-shell {

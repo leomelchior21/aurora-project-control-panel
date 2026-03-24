@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
-import type { CityData, CitySlug, ClimateMetric, DashboardMetric } from "../types";
+import { useMemo, useState } from "react";
+import type { CityData, CitySlug, DashboardMetric } from "../types";
 import { cityLogos, cityThemes } from "../data/logos";
 import { cityLayerConfigs, type DashboardLayer } from "../data/cityLayerConfigs";
+import { citySignals, type CityLeveragePoint, type CitySignal, type CityTension } from "../data/citySignals";
+import { cityInterventions, type Intervention } from "../data/cityInterventions";
 import { SystemDependencyMap } from "./SystemDependencyMap";
 
 interface CityDashboardProps {
@@ -11,140 +13,146 @@ interface CityDashboardProps {
   onSelectCity: (slug: CitySlug) => void;
 }
 
-const layers: Array<{ id: DashboardLayer; label: string; icon: string; nodeId?: string }> = [
-  { id: "mission_brief", label: "Mission Brief", icon: "brief", nodeId: "energy" },
-  { id: "overview", label: "City Overview", icon: "grid", nodeId: "energy" },
-  { id: "climate", label: "Climate", icon: "sun", nodeId: "energy" },
-  { id: "water", label: "Water", icon: "drop", nodeId: "water" },
-  { id: "air", label: "Air", icon: "air", nodeId: "housing" },
-  { id: "energy", label: "Energy", icon: "bolt", nodeId: "energy" },
-  { id: "mobility", label: "Mobility", icon: "route", nodeId: "mobility" },
-  { id: "waste", label: "Waste", icon: "waste", nodeId: "housing" },
-  { id: "biodiversity", label: "Biodiversity", icon: "leaf", nodeId: "biodiversity" },
+type SystemLayer = Extract<
+  DashboardLayer,
+  "climate" | "water" | "air" | "energy" | "mobility" | "waste" | "biodiversity"
+>;
+
+type SidebarEntry = {
+  id: DashboardLayer | "explore_systems";
+  label: string;
+  icon: string;
+  hint?: string;
+};
+
+type SignalTone = "critical" | "pressure" | "opportunity" | "stability";
+
+const sidebarEntries: SidebarEntry[] = [
+  { id: "mission_brief", label: "Mission Brief", icon: "brief", hint: "Start here" },
+  { id: "key_signals", label: "Key Signals", icon: "signal", hint: "What matters most" },
+  { id: "system_map", label: "System Map", icon: "network", hint: "See cause and effect" },
+  { id: "explore_systems", label: "Explore Systems", icon: "layers", hint: "Open a city system" },
+  { id: "interventions", label: "Interventions", icon: "wrench", hint: "Choose what to change" },
+  { id: "impact_simulator", label: "Impact Simulator", icon: "sliders", hint: "See what happens next" },
 ];
 
-function metricById(city: CityData, id: DashboardMetric["id"]) {
-  return city.dashboardMetrics.find((metric) => metric.id === id)!;
-}
+const systemLayers: Array<{
+  id: SystemLayer;
+  label: string;
+  shortLabel: string;
+  icon: string;
+  question: string;
+  summary: string;
+  linkedMetric: DashboardMetric["id"];
+  tone: SignalTone;
+}> = [
+  {
+    id: "climate",
+    label: "Climate",
+    shortLabel: "Climate",
+    icon: "sun",
+    question: "Can daily life stay safe under this climate?",
+    summary: "Heat, cold, humidity, and wind decide whether the city feels survivable outdoors.",
+    linkedMetric: "climate_stress",
+    tone: "pressure",
+  },
+  {
+    id: "water",
+    label: "Water",
+    shortLabel: "Water",
+    icon: "drop",
+    question: "Can the city keep water flowing when stress rises?",
+    summary: "Water pressure shapes health, food, cooling, and the city's ability to endure shocks.",
+    linkedMetric: "water_pressure",
+    tone: "critical",
+  },
+  {
+    id: "air",
+    label: "Air",
+    shortLabel: "Air",
+    icon: "air",
+    question: "Does the air help people recover or add more stress?",
+    summary: "Air quality, moisture, and ventilation change comfort inside homes and across streets.",
+    linkedMetric: "climate_stress",
+    tone: "pressure",
+  },
+  {
+    id: "energy",
+    label: "Energy",
+    shortLabel: "Energy",
+    icon: "bolt",
+    question: "Can energy become a city advantage instead of a burden?",
+    summary: "Energy can power cooling, heating, water systems, and cleaner mobility if designed well.",
+    linkedMetric: "energy_potential",
+    tone: "opportunity",
+  },
+  {
+    id: "mobility",
+    label: "Mobility",
+    shortLabel: "Mobility",
+    icon: "route",
+    question: "Can people move without fighting the environment?",
+    summary: "Routes, shelter, and daily exposure decide whether the city stays connected.",
+    linkedMetric: "mobility_complexity",
+    tone: "pressure",
+  },
+  {
+    id: "waste",
+    label: "Waste",
+    shortLabel: "Waste",
+    icon: "waste",
+    question: "Does waste stay in a safe loop or spill into other systems?",
+    summary: "Waste can become a resource, or it can overload water, streets, and public health.",
+    linkedMetric: "water_pressure",
+    tone: "pressure",
+  },
+  {
+    id: "biodiversity",
+    label: "Biodiversity",
+    shortLabel: "Biodiversity",
+    icon: "leaf",
+    question: "Can the city grow without breaking the living systems around it?",
+    summary: "Biodiversity protects cooling, water cycles, soil, habitat, and long-term resilience.",
+    linkedMetric: "ecosystem_sensitivity",
+    tone: "critical",
+  },
+];
 
-type SeasonalMetricKey = "heat" | "rainfall" | "humidity" | "thermal_comfort";
-
-const seasonalMetricLabels: Record<SeasonalMetricKey, string> = {
-  heat: "Heat",
-  rainfall: "Rainfall",
-  humidity: "Humidity",
-  thermal_comfort: "Thermal Comfort",
+const signalStyles: Record<SignalTone, { label: string; color: string; border: string; bg: string }> = {
+  critical: { label: "Critical", color: "#ff6b6b", border: "rgba(255,107,107,0.45)", bg: "rgba(255,107,107,0.12)" },
+  pressure: { label: "Pressure", color: "#f6c85f", border: "rgba(246,200,95,0.35)", bg: "rgba(246,200,95,0.1)" },
+  opportunity: { label: "Opportunity", color: "#51d88a", border: "rgba(81,216,138,0.35)", bg: "rgba(81,216,138,0.1)" },
+  stability: { label: "Stable", color: "#5cc8ff", border: "rgba(92,200,255,0.35)", bg: "rgba(92,200,255,0.1)" },
 };
 
-const heatIndexToCelsius = (value: number) => Math.round(7 + value * 0.35);
-
-const formatClimateValue = (metricId: ClimateMetric["id"] | SeasonalMetricKey, value: number) =>
-  metricId === "heat" ? `${heatIndexToCelsius(value)}°C` : `${value}`;
-
-const seasonalPatterns: Record<SeasonalMetricKey, number[]> = {
-  heat: [0.92, 0.97, 1, 1.04, 1.08, 1.02],
-  rainfall: [0.78, 0.84, 0.92, 1, 0.9, 0.82],
-  humidity: [0.88, 0.93, 0.97, 1, 0.95, 0.9],
-  thermal_comfort: [0.86, 0.9, 0.94, 1, 0.92, 0.88],
+const impactVectors: Record<string, Partial<Record<DashboardMetric["id"], number>>> = {
+  Climate: { climate_stress: -14, mobility_complexity: -6 },
+  Water: { water_pressure: -18, climate_stress: -4 },
+  Air: { climate_stress: -7, mobility_complexity: -4 },
+  Energy: { energy_potential: 18, climate_stress: -6, water_pressure: -5 },
+  Mobility: { mobility_complexity: -18, climate_stress: -4 },
+  Waste: { water_pressure: -7, ecosystem_sensitivity: -9 },
+  Biodiversity: { ecosystem_sensitivity: -19, climate_stress: -6, water_pressure: -5 },
 };
 
-const climateSummaryByProfile = (metrics: ClimateMetric[]) => {
-  const lookup = Object.fromEntries(metrics.map((metric) => [metric.id, metric.value])) as Record<ClimateMetric["id"], number>;
-
-  if (lookup.heat >= 80 && lookup.rainfall <= 30) {
-    return "Extreme heat and low rainfall define the climate pressure here.";
-  }
-
-  if (lookup.humidity >= 85 && lookup.rainfall >= 80) {
-    return "High humidity and rainfall dominate this climate profile, while wind remains moderate.";
-  }
-
-  if (lookup.wind >= 70) {
-    return "Wind strongly shapes comfort here, even when other climate signals stay moderate.";
-  }
-
-  return "Climate signals are mixed here, so comfort changes with both moisture and temperature.";
+const readableEffort: Record<Intervention["effort"], string> = {
+  low: "Quick build",
+  medium: "City-scale shift",
+  high: "Long mission",
 };
 
-const seasonalInsight = (metric: SeasonalMetricKey, points: Array<{ label: string; value: number }>) => {
-  const sorted = [...points].sort((a, b) => b.value - a.value);
-  const peak = sorted[0];
+const clamp = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, Math.round(value)));
 
-  switch (metric) {
-    case "heat":
-      return `Seasonal heat peaks around ${peak.label}, keeping thermal stress elevated through the year.`;
-    case "rainfall":
-      return `${peak.label} brings the strongest rainfall pulse, increasing water-related system pressure.`;
-    case "humidity":
-      return `Humidity builds toward ${peak.label}, which can reduce comfort and slow surface drying.`;
-    default:
-      return `Thermal comfort shifts most around ${peak.label}, showing when daily life feels easier or harder.`;
-  }
-};
+const metricById = (city: CityData, id: DashboardMetric["id"]) =>
+  city.dashboardMetrics.find((metric) => metric.id === id) ?? city.dashboardMetrics[0];
 
-const clamp100 = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+const formatDelta = (value: number) => `${value > 0 ? "+" : ""}${Math.round(value)}`;
 
-function buildSeasonalSeries(city: CityData, metric: SeasonalMetricKey) {
-  const months = ["Jan", "Mar", "May", "Jul", "Sep", "Nov"];
-  const sourceValue =
-    metric === "thermal_comfort"
-      ? city.raw.thermalComfort
-      : metric === "heat"
-        ? city.raw.heat
-        : metric === "rainfall"
-          ? city.raw.rainfall
-          : city.raw.humidity;
-
-  return months.map((label, index) => ({
-    label,
-    value:
-      metric === "heat"
-        ? heatIndexToCelsius(clamp100(sourceValue * seasonalPatterns[metric][index]))
-        : clamp100(sourceValue * seasonalPatterns[metric][index]),
-  }));
-}
-
-function AnimatedNumber({ value }: { value: number }) {
-  const [displayValue, setDisplayValue] = useState(0);
-
-  useEffect(() => {
-    let frame = 0;
-    const start = performance.now();
-    const duration = 360;
-
-    const tick = (timestamp: number) => {
-      const progress = Math.min((timestamp - start) / duration, 1);
-      setDisplayValue(Math.round(value * progress));
-      if (progress < 1) {
-        frame = window.requestAnimationFrame(tick);
-      }
-    };
-
-    frame = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frame);
-  }, [value]);
-
-  return <>{displayValue}</>;
-}
-
-function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
-  const stroke = active ? "#ffffff" : "#94a3b8";
+function iconFor(icon: string, active: boolean) {
+  const stroke = active ? "#f8fafc" : "#7b8aa5";
   const className = "h-5 w-5 shrink-0";
 
   switch (icon) {
-    case "sun":
-      return (
-        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" />
-        </svg>
-      );
-    case "drop":
-      return (
-        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <path d="M12 3c3 4 5 6.5 5 9.4A5 5 0 1 1 7 12.4C7 9.5 9 7 12 3Z" />
-        </svg>
-      );
     case "brief":
       return (
         <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
@@ -152,10 +160,53 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
           <path d="M9 8h6M9 12h6" />
         </svg>
       );
-    case "bolt":
+    case "signal":
       return (
         <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <path d="M13 2 6 13h5l-1 9 8-12h-5l0-8Z" />
+          <path d="M22 12h-4l-3 8-6-16-3 8H2" />
+        </svg>
+      );
+    case "network":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <circle cx="18" cy="5" r="2" />
+          <circle cx="6" cy="12" r="2" />
+          <circle cx="18" cy="19" r="2" />
+          <path d="M8 12h8M15.5 6.5 8 10.3M8 13.7l7.5 3.8" />
+        </svg>
+      );
+    case "layers":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+          <path d="m3 12 9 5 9-5" />
+          <path d="m3 16 9 5 9-5" />
+        </svg>
+      );
+    case "wrench":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="m14.7 6.3 3 3a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-8 8l-7 7a2.1 2.1 0 1 1-3-3l7-7a6 6 0 0 1 8-8Z" />
+        </svg>
+      );
+    case "sliders":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="M4 21v-7M4 10V3M12 21v-3M12 14V3M20 21v-9M20 8V3" />
+          <path d="M2 14h4M10 14h4M18 8h4" />
+        </svg>
+      );
+    case "sun":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" />
+        </svg>
+      );
+    case "drop":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="M12 3c3 4 5 6.6 5 9.4A5 5 0 1 1 7 12.4C7 9.6 9 7 12 3Z" />
         </svg>
       );
     case "air":
@@ -164,6 +215,12 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
           <path d="M4 9h10a3 3 0 1 0-3-3" />
           <path d="M2 13h15a2.5 2.5 0 1 1-2.5 2.5" />
           <path d="M5 17h9a2 2 0 1 1-2 2" />
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
+          <path d="M13 2 6 13h5l-1 9 8-12h-5V2Z" />
         </svg>
       );
     case "route":
@@ -177,10 +234,7 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
     case "waste":
       return (
         <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <path d="M5 7h14" />
-          <path d="M9 4h6" />
-          <path d="M7 7l1 12h8l1-12" />
-          <path d="M10 11v5M14 11v5" />
+          <path d="M5 7h14M9 4h6M7 7l1 12h8l1-12M10 11v5M14 11v5" />
         </svg>
       );
     case "leaf":
@@ -194,113 +248,307 @@ function SidebarIcon({ icon, active }: { icon: string; active: boolean }) {
     default:
       return (
         <svg viewBox="0 0 24 24" className={className} fill="none" stroke={stroke} strokeWidth="1.8">
-          <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />
+          <rect x="4" y="4" width="16" height="16" rx="3" />
         </svg>
       );
   }
 }
 
-function MetricTile({ metric, color }: { metric: DashboardMetric; color: string }) {
+function Panel({
+  children,
+  className = "",
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
-    <div className="relative overflow-hidden rounded-[20px] border border-white/10 bg-slate-950/55 p-4">
-      <div className="absolute inset-x-0 top-0 h-0.5 rounded-t-[20px]" style={{ background: `linear-gradient(90deg, ${color}, transparent 70%)` }} />
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{metric.label}</p>
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <p className="text-[clamp(1.6rem,2vw,2.2rem)] font-semibold text-white">
-          <AnimatedNumber value={metric.value} />
-        </p>
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[11px] font-medium" style={{ color }}>{metric.value}%</span>
-          <div className="h-2 w-24 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${metric.value}%`, background: `linear-gradient(90deg, ${color}88, ${color})` }} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CompactMetricRow({ metrics, color }: { metrics: DashboardMetric[]; color: string }) {
-  return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-      {metrics.map((metric) => (
-        <MetricTile key={metric.id} metric={metric} color={color} />
-      ))}
+    <section className={`aurora-panel rounded-[28px] border border-white/10 ${className}`} style={style}>
+      {children}
     </section>
   );
 }
 
-function LineChart({ data, color, title, subtitle }: { data: Array<{ label: string; value: number }>; color: string; title: string; subtitle: string }) {
-  const chartHeight = 100;
-  const chartWidth = 100;
-  const points = data.map((point, index) => {
-    const x = (index / Math.max(1, data.length - 1)) * chartWidth;
-    const y = chartHeight - point.value;
-    return { ...point, x, y };
-  });
-  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
-  const area = [`0,${chartHeight}`, ...points.map((point) => `${point.x},${point.y}`), `${chartWidth},${chartHeight}`].join(" ");
-  const ticks = [25, 50, 75];
+function SectionEyebrow({ children }: { children: React.ReactNode }) {
+  return <p className="text-[10px] uppercase tracking-[0.34em] text-slate-500">{children}</p>;
+}
+
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <SectionEyebrow>Insight Layer</SectionEyebrow>
+        <h2 className="mt-2 font-headline text-[clamp(1.5rem,3vw,2.4rem)] leading-none text-white">{title}</h2>
+        {subtitle ? <p className="mt-2 max-w-3xl text-sm text-slate-300">{subtitle}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function StatusPill({ tone, label }: { tone: SignalTone; label: string }) {
+  const style = signalStyles[tone];
 
   return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-          <h3 className="text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-        </div>
-      </div>
-      <svg viewBox="0 0 100 100" className="h-44 w-full overflow-visible">
-        <defs>
-          <linearGradient id={`lg-${title.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.38" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.03" />
-          </linearGradient>
-        </defs>
-        {ticks.map((tick) => (
-          <line key={tick} x1="0" y1={chartHeight - tick} x2="100" y2={chartHeight - tick} stroke="rgba(148,163,184,0.14)" strokeWidth="0.8" />
-        ))}
-        <line x1="0" y1="100" x2="100" y2="100" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-        <polygon points={area} fill={`url(#lg-${title.replace(/\s+/g, '')})`} />
-        <polyline fill="none" stroke={color} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" points={polyline} />
-        {points.map((point) => (
-          <g key={point.label}>
-            <circle cx={point.x} cy={point.y} r="2.6" fill={color} />
-            <circle cx={point.x} cy={point.y} r="5" fill={`${color}25`} />
-            <text x={point.x} y={point.y - 8} textAnchor="middle" fill="rgba(255,255,255,0.75)" fontSize="7" fontWeight="600">{point.value}</text>
-          </g>
-        ))}
+    <div
+      className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs text-white/90"
+      style={{ borderColor: style.border, background: style.bg }}
+    >
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: style.color }} />
+      <span className="uppercase tracking-[0.2em] text-[10px] text-slate-400">{style.label}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function ScoreDial({ value, label, tone }: { value: number; label: string; tone: SignalTone }) {
+  const style = signalStyles[tone];
+  const angle = 220;
+  const dash = (value / 100) * angle;
+
+  return (
+    <div className="relative flex h-[160px] w-[160px] items-center justify-center">
+      <svg viewBox="0 0 120 120" className="absolute inset-0 h-full w-full -rotate-[160deg]">
+        <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" strokeDasharray={`${angle} 360`} />
+        <circle
+          cx="60"
+          cy="60"
+          r="42"
+          fill="none"
+          stroke={style.color}
+          strokeLinecap="round"
+          strokeWidth="12"
+          strokeDasharray={`${dash} 360`}
+        />
       </svg>
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-slate-400 sm:grid-cols-6">
-        {data.map((point) => (
-          <div key={point.label} className="rounded-xl border border-white/8 bg-white/[0.02] px-2 py-2">
-            <p>{point.label}</p>
-            <p className="mt-1 text-sm font-semibold text-white">{point.value}</p>
-          </div>
+      <div className="text-center">
+        <p className="font-display text-[3.25rem] leading-none text-white">{value}</p>
+        <p className="mt-1 text-[11px] uppercase tracking-[0.28em] text-slate-400">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function SidebarSection({
+  entry,
+  active,
+  onClick,
+}: {
+  entry: SidebarEntry;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 rounded-[22px] border border-transparent px-3 py-3 text-left transition hover:border-white/10 hover:bg-white/[0.04]"
+      style={active ? { background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.14)" } : undefined}
+    >
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+        {iconFor(entry.icon, active)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className={`truncate text-sm ${active ? "text-white" : "text-slate-200"}`}>{entry.label}</p>
+        {entry.hint ? <p className="truncate text-xs text-slate-500">{entry.hint}</p> : null}
+      </div>
+    </button>
+  );
+}
+
+function MiniSystemButton({
+  system,
+  active,
+  onClick,
+}: {
+  system: (typeof systemLayers)[number];
+  active: boolean;
+  onClick: () => void;
+}) {
+  const tone = signalStyles[system.tone];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-[18px] border px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-white/20"
+      style={{
+        borderColor: active ? tone.border : "rgba(255,255,255,0.08)",
+        background: active ? tone.bg : "rgba(255,255,255,0.03)",
+      }}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-black/20">
+          {iconFor(system.icon, active)}
+        </div>
+        <span className="text-[10px] uppercase tracking-[0.24em]" style={{ color: tone.color }}>
+          {signalStyles[system.tone].label}
+        </span>
+      </div>
+      <p className="text-sm font-medium text-white">{system.shortLabel}</p>
+    </button>
+  );
+}
+
+function ActionPrompt({
+  title,
+  body,
+  buttonLabel,
+  onClick,
+}: {
+  title: string;
+  body: string;
+  buttonLabel: string;
+  onClick: () => void;
+}) {
+  return (
+    <div className="rounded-[24px] border border-white/10 bg-slate-950/45 p-4 backdrop-blur-md">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{title}</p>
+      <p className="mt-3 min-h-[72px] text-sm text-slate-200">{body}</p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="mt-4 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
+      >
+        {buttonLabel}
+      </button>
+    </div>
+  );
+}
+
+function CompareRow({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-200">{label}</p>
+        <p className="text-sm font-semibold text-white">{value}</p>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
+        <div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}99, ${color})` }} />
+      </div>
+    </div>
+  );
+}
+
+function SignalCard({ tone, signal, onClick }: { tone: SignalTone; signal: CitySignal; onClick: () => void }) {
+  const style = signalStyles[tone];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-[26px] border p-5 text-left transition hover:-translate-y-1"
+      style={{ borderColor: style.border, background: `linear-gradient(180deg, ${style.bg}, rgba(255,255,255,0.02))` }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[10px] uppercase tracking-[0.28em]" style={{ color: style.color }}>
+          {style.label}
+        </span>
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-300">
+          {signal.system}
+        </span>
+      </div>
+      <h3 className="mt-4 font-headline text-[clamp(1.4rem,2.2vw,1.9rem)] leading-none text-white">{signal.headline}</h3>
+      <p className="mt-3 text-sm text-slate-300">{signal.detail}</p>
+      <p className="mt-5 text-[11px] uppercase tracking-[0.22em] text-slate-400">Click to investigate this system</p>
+    </button>
+  );
+}
+
+function TensionCard({ tension }: { tension: CityTension }) {
+  return (
+    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+      <div className="flex items-center gap-3">
+        <span className="rounded-full border border-rose-400/35 bg-rose-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-rose-200">
+          Tension
+        </span>
+        <h4 className="text-base text-white">
+          {tension.a} vs {tension.b}
+        </h4>
+      </div>
+      <p className="mt-3 text-sm text-slate-300">{tension.description}</p>
+    </div>
+  );
+}
+
+function LeverageCard({ point }: { point: CityLeveragePoint }) {
+  return (
+    <div className="rounded-[22px] border border-emerald-400/15 bg-emerald-400/[0.05] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-emerald-200/80">{point.system}</p>
+          <h4 className="mt-2 text-lg text-white">{point.name}</h4>
+        </div>
+        <span className="font-display text-3xl text-emerald-200">{point.potential}</span>
+      </div>
+      <p className="mt-3 text-sm text-slate-300">{point.why}</p>
+    </div>
+  );
+}
+
+function PressureCompare({
+  label,
+  current,
+  cities,
+  city,
+}: {
+  label: string;
+  current: number;
+  cities: CityData[];
+  city: CityData;
+}) {
+  const values = cities.map((entry) => ({
+    label: entry.city,
+    value:
+      label === "Climate"
+        ? metricById(entry, "climate_stress").value
+        : label === "Water"
+          ? metricById(entry, "water_pressure").value
+          : label === "Mobility"
+            ? metricById(entry, "mobility_complexity").value
+            : metricById(entry, "ecosystem_sensitivity").value,
+    color: entry.slug === city.slug ? entry.themeColor : "rgba(148,163,184,0.55)",
+  }));
+
+  return (
+    <div className="rounded-[22px] border border-white/10 bg-white/[0.02] p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-white">{label}</p>
+        <p className="text-sm text-slate-400">Current: {current}</p>
+      </div>
+      <div className="grid gap-3">
+        {values.map((value) => (
+          <CompareRow key={value.label} label={value.label} value={value.value} color={value.color} />
         ))}
       </div>
     </div>
   );
 }
 
-function HorizontalBars({ data, title, subtitle, color }: { data: Array<{ label: string; value: number }>; title: string; subtitle: string; color: string }) {
+function RelationalChart({
+  title,
+  subtitle,
+  items,
+  color,
+}: {
+  title: string;
+  subtitle: string;
+  items: Array<{ label: string; value: number }>;
+  color: string;
+}) {
   return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-          <h3 className="text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-        </div>
-      </div>
-      <div className="grid gap-3">
-        {data.map((item) => (
+    <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{subtitle}</p>
+      <h3 className="mt-2 text-xl text-white">{title}</h3>
+      <div className="mt-5 grid gap-4">
+        {items.map((item) => (
           <div key={item.label}>
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-sm text-slate-300">{item.label}</p>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-sm text-slate-200">{item.label}</p>
               <p className="text-sm font-semibold text-white">{item.value}</p>
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
-              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.value}%`, background: `linear-gradient(90deg, ${color}90, ${color})` }} />
+              <div className="h-full rounded-full" style={{ width: `${item.value}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }} />
             </div>
           </div>
         ))}
@@ -309,1028 +557,881 @@ function HorizontalBars({ data, title, subtitle, color }: { data: Array<{ label:
   );
 }
 
-function RecyclingPieChart({
-  title,
-  subtitle,
-  data,
-  colors,
-}: {
-  title: string;
-  subtitle: string;
-  data: Array<{ label: string; value: number }>;
-  colors: string[];
-}) {
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const total = Math.max(data.reduce((sum, item) => sum + item.value, 0), 1);
-  const unrecycled = data.find((item) => item.label.toLowerCase() === "unrecycled")?.value ?? 0;
-  let progressOffset = 0;
-
+function StatChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-1">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-      <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-      <div className="mt-4 grid gap-4 xl:grid-cols-[240px_1fr] xl:items-center">
-        <svg viewBox="0 0 120 120" className="mx-auto h-64 w-64 shrink-0">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="14" />
-          {data.map((item, index) => {
-            const segmentLength = (item.value / total) * circumference;
-            const dashArray = `${segmentLength} ${circumference}`;
-            const dashOffset = -progressOffset;
-            progressOffset += segmentLength;
+    <div className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{label}</p>
+      <p className="mt-2 text-sm text-white">{value}</p>
+    </div>
+  );
+}
 
-            return (
-              <circle
-                key={item.label}
-                cx="60"
-                cy="60"
-                r={radius}
-                fill="none"
-                stroke={colors[index % colors.length]}
-                strokeWidth="14"
-                strokeLinecap="round"
-                strokeDasharray={dashArray}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 60 60)"
-              />
-            );
-          })}
-          <text x="60" y="56" textAnchor="middle" fill="#fca5a5" fontSize="13" fontWeight="700">
-            {unrecycled}%
-          </text>
-          <text x="60" y="70" textAnchor="middle" fill="rgba(248,113,113,0.82)" fontSize="7.5">
-            unrecycled
-          </text>
-          <text x="60" y="80" textAnchor="middle" fill="rgba(148,163,184,0.75)" fontSize="6.5">
-            to nature
-          </text>
-        </svg>
-
-        <div className="grid gap-2">
-          {data.map((item, index) => (
-            <div key={item.label} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-1.5">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
-                <span className="text-xs text-slate-300">{item.label}</span>
-              </div>
-              <span className="text-xs font-semibold text-white">{item.value}%</span>
-            </div>
-          ))}
-        </div>
+function MetricBar({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm text-slate-300">{label}</p>
+        <p className="text-sm font-semibold text-white">{value}</p>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
+        <div className="h-full rounded-full" style={{ width: `${value}%`, background: color }} />
       </div>
     </div>
   );
 }
 
-function OrganicReturnChart({
-  title,
-  subtitle,
-  data,
-  color,
-}: {
-  title: string;
-  subtitle: string;
-  data: Array<{ label: string; value: number }>;
-  color: string;
-}) {
-  const points = data.map((item, index) => ({
-    ...item,
-    x: 34 + index * 46,
-    y: 96 - item.value * 0.62,
-  }));
-
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-      <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-      <div className="mt-4">
-        <svg viewBox="0 0 160 120" className="h-40 w-full">
-          <defs>
-            <marker id="organic-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-              <path d="M0 0L6 3L0 6Z" fill={color} />
-            </marker>
-          </defs>
-          {points.map((point, index) => (
-            <g key={point.label}>
-              <circle cx={point.x} cy={point.y} r="16" fill={`${color}1c`} stroke={color} strokeWidth="1.5" />
-              <text x={point.x} y={point.y - 2} textAnchor="middle" fill="#ffffff" fontSize="8.5" fontWeight="700">
-                {point.value}
-              </text>
-              <text x={point.x} y={point.y + 26} textAnchor="middle" fill="rgba(226,232,240,0.82)" fontSize="8">
-                {point.label}
-              </text>
-              {index < points.length - 1 ? (
-                <path
-                  d={`M${point.x + 16} ${point.y} C ${point.x + 26} ${point.y - 18}, ${points[index + 1].x - 26} ${points[index + 1].y - 18}, ${points[index + 1].x - 16} ${points[index + 1].y}`}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth="2"
-                  markerEnd="url(#organic-arrow)"
-                />
-              ) : null}
-            </g>
-          ))}
-        </svg>
-        <p className="text-sm text-slate-300">Organic material can move from food scraps back into soil support when the loop stays active.</p>
-      </div>
-    </div>
-  );
-}
-
-function MultiToneRing({
-  title,
-  subtitle,
-  data,
-  colors,
-}: {
-  title: string;
-  subtitle: string;
-  data: Array<{ label: string; value: number }>;
-  colors: string[];
-}) {
-  const radius = 44;
-  const circumference = 2 * Math.PI * radius;
-  const total = Math.max(data.reduce((sum, item) => sum + item.value, 0), 1);
-  let progressOffset = 0;
-
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-      <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-      <div className="mt-4 grid gap-4 xl:grid-cols-[140px_1fr] xl:items-center">
-        <svg viewBox="0 0 120 120" className="mx-auto h-32 w-32 shrink-0">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
-          {data.map((item, index) => {
-            const segmentLength = (item.value / total) * circumference;
-            const dashArray = `${segmentLength} ${circumference}`;
-            const dashOffset = -progressOffset;
-            progressOffset += segmentLength;
-
-            return (
-              <circle
-                key={item.label}
-                cx="60"
-                cy="60"
-                r={radius}
-                fill="none"
-                stroke={colors[index % colors.length]}
-                strokeWidth="12"
-                strokeLinecap="round"
-                strokeDasharray={dashArray}
-                strokeDashoffset={dashOffset}
-                transform="rotate(-90 60 60)"
-              />
-            );
-          })}
-        </svg>
-
-        <div className="grid gap-2">
-          {data.map((item, index) => (
-            <div key={item.label} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
-                <span className="text-sm text-slate-300">{item.label}</span>
-              </div>
-              <span className="text-sm font-semibold text-white">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RingSummary({ title, value, color, subtitle }: { title: string; value: number; color: string; subtitle: string }) {
-  const circumference = 2 * Math.PI * 42;
-  const targetOffset = circumference - (value / 100) * circumference;
-  const [ringOffset, setRingOffset] = useState(circumference);
-  const gradId = `ring-grad-${title.replace(/\s+/g, '')}`;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setRingOffset(targetOffset), 80);
-    return () => clearTimeout(timer);
-  }, [targetOffset]);
-
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-      <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-      <div className="mt-4 flex items-center gap-4">
-        <svg viewBox="0 0 120 120" className="h-28 w-28 shrink-0">
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={color} stopOpacity="0.55" />
-              <stop offset="100%" stopColor={color} />
-            </linearGradient>
-          </defs>
-          <circle cx="60" cy="60" r="42" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
-          <circle
-            cx="60"
-            cy="60"
-            r="42"
-            fill="none"
-            stroke={`url(#${gradId})`}
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={ringOffset}
-            transform="rotate(-90 60 60)"
-            style={{ transition: 'stroke-dashoffset 0.85s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-          />
-          <text x="60" y="64" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="8" letterSpacing="1">{Math.round(value)}%</text>
-        </svg>
-        <div>
-          <p className="text-[clamp(1.8rem,2.2vw,2.5rem)] font-semibold text-white">
-            <AnimatedNumber value={value} />
-          </p>
-          <p className="text-sm text-slate-300">Score out of 100</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TextStack({ title, subtitle, items }: { title: string; subtitle: string; items: string[] }) {
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{subtitle}</p>
-      <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-      <div className="mt-4 grid gap-3">
-        {items.map((item) => (
-          <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500" />
-            <span className="text-sm text-slate-200">{item}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function BottomInsightCards({
-  cards,
-}: {
-  cards: Array<{ label: string; value: string; note: string; tone?: "positive" | "warning" | "neutral" }>;
-}) {
-  const iconForCard = (label: string, tone?: "positive" | "warning" | "neutral") => {
-    const key = label.toLowerCase();
-    if (key.includes("risk") || tone === "warning") {
-      return <path d="M12 4 20 19H4L12 4Zm0 5v4m0 3h.01" />;
-    }
-    if (key.includes("system") || key.includes("source") || key.includes("energy")) {
-      return <path d="M13 2 6 13h5l-1 9 8-12h-5l0-8Z" />;
-    }
-    if (key.includes("water")) {
-      return <path d="M12 3c3 4 5 6.5 5 9.4A5 5 0 1 1 7 12.4C7 9.5 9 7 12 3Z" />;
-    }
-    if (key.includes("linked") || key.includes("cities")) {
-      return <path d="M7 12h10M12 7v10M5 5h4v4H5zM15 15h4v4h-4z" />;
-    }
-    if (key.includes("air")) {
-      return <path d="M4 9h10a3 3 0 1 0-3-3M2 13h15a2.5 2.5 0 1 1-2.5 2.5M5 17h9a2 2 0 1 1-2 2" />;
-    }
-    if (key.includes("waste") || key.includes("recycled") || key.includes("organic")) {
-      return <path d="M8 6h8l2 3-6 11L6 9l2-3Zm0 0 4 4 4-4" />;
-    }
-    if (key.includes("comfort") || key.includes("heat")) {
-      return <path d="M12 3v10a4 4 0 1 0 4 4" />;
-    }
-    return <path d="M5 12h14M12 5v14" />;
-  };
-
-  return (
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => {
-        const badgeClass =
-          card.tone === "positive"
-            ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-400"
-            : card.tone === "warning"
-              ? "border border-rose-500/30 bg-rose-500/15 text-rose-400"
-              : "border border-slate-500/30 bg-slate-500/15 text-slate-400";
-
-        return (
-          <div key={`${card.label}-${card.value}`} className="rounded-[26px] border border-white/10 bg-slate-900/70 p-5 backdrop-blur-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-slate-300">
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  {iconForCard(card.label, card.tone)}
-                </svg>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${badgeClass}`}>{card.tone ?? "neutral"}</span>
-            </div>
-            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
-            <p className="mt-2 text-[clamp(1.9rem,2.4vw,2.6rem)] font-bold leading-none text-white">{card.value}</p>
-            <p className="mt-3 max-w-[22ch] text-sm leading-6 text-slate-400">{card.note}</p>
-          </div>
-        );
-      })}
-    </section>
-  );
-}
-
-function ClimatePanel({
-  metrics,
-  city,
-  color,
-}: {
-  metrics: ClimateMetric[];
-  city: CityData;
-  color: string;
-}) {
-  const [activeSeasonalMetric, setActiveSeasonalMetric] = useState<SeasonalMetricKey>("heat");
-  const series = buildSeasonalSeries(city, activeSeasonalMetric);
-  const maxPoint = series.reduce((best, point) => (point.value > best.value ? point : best), series[0]);
-  const minPoint = series.reduce((best, point) => (point.value < best.value ? point : best), series[0]);
-  const chartHeight = 100;
-  const chartWidth = 90;
-  const chartStartX = 10;
-  const chartMin = activeSeasonalMetric === "heat" ? Math.floor((Math.min(...series.map((point) => point.value)) - 2) / 5) * 5 : 0;
-  const chartMax = activeSeasonalMetric === "heat" ? Math.ceil((Math.max(...series.map((point) => point.value)) + 2) / 5) * 5 : 100;
-  const chartRange = Math.max(chartMax - chartMin, 1);
-  const points = series.map((point, index) => ({
-    ...point,
-    x: chartStartX + (index / Math.max(1, series.length - 1)) * chartWidth,
-    y: chartHeight - ((point.value - chartMin) / chartRange) * chartHeight,
-  }));
-  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
-  const area = [`${chartStartX},${chartHeight}`, ...points.map((point) => `${point.x},${point.y}`), `${chartStartX + chartWidth},${chartHeight}`].join(" ");
-  const climateSummary = climateSummaryByProfile(metrics);
-  const radii = [18, 32, 46, 60, 74];
-  const seasonalTicks =
-    activeSeasonalMetric === "heat"
-      ? Array.from({ length: 5 }, (_, index) => chartMin + ((chartMax - chartMin) / 4) * index)
-      : [20, 40, 60, 80, 100];
-
-  return (
-    <div className="grid gap-3 xl:grid-cols-[1.02fr_1.08fr]">
-      <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-        <div className="mb-5">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Climate</p>
-            <h3 className="text-[clamp(1rem,1.6vw,1.2rem)] font-semibold text-white">Climate signature</h3>
-            <p className="mt-2 text-sm text-slate-300">Five core climate signals arranged as radial bars.</p>
-          </div>
-        </div>
-        <div className="grid gap-5">
-          <svg viewBox="0 0 260 260" className="mx-auto h-[clamp(16rem,30vw,21rem)] w-[clamp(16rem,30vw,21rem)]">
-            {radii.map((radius, index) => (
-              <g key={radius}>
-                <circle cx="130" cy="130" r={radius} fill="none" stroke="rgba(148,163,184,0.18)" strokeWidth="1.2" />
-                <text x="130" y={130 - radius + 10} fill="rgba(148,163,184,0.55)" fontSize="8" textAnchor="middle">
-                  {(index + 1) * 20}
-                </text>
-              </g>
-            ))}
-            <polygon
-              points={metrics.map((metric, index) => {
-                const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
-                const r = 18 + metric.value * 0.56;
-                return `${130 + Math.cos(angle) * r},${130 + Math.sin(angle) * r}`;
-              }).join(' ')}
-              fill={`${color}18`}
-              stroke={`${color}55`}
-              strokeWidth="1.2"
-              strokeLinejoin="round"
-            />
-            {metrics.map((metric, index) => {
-              const angle = (Math.PI * 2 * index) / metrics.length - Math.PI / 2;
-              const barRadius = 18 + metric.value * 0.56;
-              const innerX = 130 + Math.cos(angle) * 18;
-              const innerY = 130 + Math.sin(angle) * 18;
-              const outerX = 130 + Math.cos(angle) * barRadius;
-              const outerY = 130 + Math.sin(angle) * barRadius;
-              const labelX = 130 + Math.cos(angle) * 96;
-              const labelY = 130 + Math.sin(angle) * 96;
-              const valueX = 130 + Math.cos(angle) * (barRadius + 14);
-              const valueY = 130 + Math.sin(angle) * (barRadius + 14);
-
-              return (
-                <g key={metric.id}>
-                  <line x1="130" y1="130" x2={labelX} y2={labelY} stroke="rgba(148,163,184,0.12)" strokeWidth="1" />
-                  <line x1={innerX} y1={innerY} x2={outerX} y2={outerY} stroke={color} strokeWidth="14" strokeLinecap="round" />
-                  <circle cx={outerX} cy={outerY} r="5" fill={color} />
-                  <text
-                    x={labelX}
-                    y={labelY + (labelY > 130 ? 12 : -8)}
-                    fill="rgba(226,232,240,0.92)"
-                    fontSize="10"
-                    letterSpacing="1.1"
-                    textAnchor="middle"
-                  >
-                    {metric.label.toUpperCase()}
-                  </text>
-                  <text x={valueX} y={valueY} fill="#ffffff" fontSize="11" fontWeight="700" textAnchor="middle">
-                    {formatClimateValue(metric.id, metric.value)}
-                  </text>
-                </g>
-              );
-            })}
-            <circle cx="130" cy="130" r="14" fill="rgba(255,255,255,0.04)" stroke="rgba(148,163,184,0.18)" />
-          </svg>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {metrics.map((metric) => (
-              <div key={metric.id} className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{metric.label}</p>
-                <p className="mt-2 text-[clamp(1.15rem,1.8vw,1.55rem)] font-semibold text-white">{formatClimateValue(metric.id, metric.value)}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-sm text-slate-300">{climateSummary}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-3">
-        <div className="rounded-[22px] border border-white/10 bg-slate-950/55 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Seasonal behavior</p>
-              <h3 className="text-[clamp(1rem,1.6vw,1.2rem)] font-semibold text-white">{seasonalMetricLabels[activeSeasonalMetric]} across the year</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(seasonalMetricLabels) as SeasonalMetricKey[]).map((metricKey) => {
-                const active = metricKey === activeSeasonalMetric;
-                return (
-                  <button
-                    key={metricKey}
-                    type="button"
-                    onClick={() => setActiveSeasonalMetric(metricKey)}
-                    className="rounded-full border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition"
-                    style={
-                      active
-                        ? { borderColor: color, backgroundColor: `${color}22`, color: "#ffffff" }
-                        : { borderColor: "rgba(255,255,255,0.1)", color: "rgb(148 163 184)" }
-                    }
-                  >
-                    {seasonalMetricLabels[metricKey]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_180px]">
-            <svg viewBox="0 0 112 100" className="h-56 w-full overflow-visible">
-              {seasonalTicks.map((tick) => (
-                <g key={tick}>
-                  <line
-                    x1="10"
-                    y1={100 - ((tick - chartMin) / chartRange) * 100}
-                    x2="106"
-                    y2={100 - ((tick - chartMin) / chartRange) * 100}
-                    stroke="rgba(148,163,184,0.14)"
-                    strokeWidth="0.8"
-                  />
-                  <text x="6" y={103 - ((tick - chartMin) / chartRange) * 100} textAnchor="end" fill="rgba(148,163,184,0.6)" fontSize="6">
-                    {activeSeasonalMetric === "heat" ? `${Math.round(tick)}°` : Math.round(tick)}
-                  </text>
-                </g>
-              ))}
-              <line x1="10" y1="100" x2="106" y2="100" stroke="rgba(148,163,184,0.2)" strokeWidth="1" />
-              <line x1="10" y1="10" x2="10" y2="100" stroke="rgba(148,163,184,0.2)" strokeWidth="1" />
-              <polygon points={area} fill={`${color}20`} />
-              <polyline points={polyline} fill="none" stroke={color} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" />
-              {points.map((point) => {
-                const isPeak = point.label === maxPoint.label && point.value === maxPoint.value;
-                const isLow = point.label === minPoint.label && point.value === minPoint.value;
-                return (
-                  <g key={point.label}>
-                    <circle cx={point.x} cy={point.y} r={isPeak || isLow ? 3.8 : 2.8} fill={color} />
-                    {(isPeak || isLow) ? <circle cx={point.x} cy={point.y} r="7" fill={`${color}22`} /> : null}
-                    <text x={point.x} y="108" textAnchor="middle" fill="rgba(226,232,240,0.78)" fontSize="6.5">
-                      {point.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-
-            <div className="grid gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Highest point</p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {maxPoint.label} · {formatClimateValue(activeSeasonalMetric, maxPoint.value)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Lowest point</p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {minPoint.label} · {formatClimateValue(activeSeasonalMetric, minPoint.value)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Seasonal peak</p>
-                <p className="mt-2 text-sm text-slate-200">{seasonalInsight(activeSeasonalMetric, series)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CompareMetricCard({
-  title,
-  data,
-}: {
-  title: string;
-  data: Array<{ label: string; value: number; color: string }>;
-}) {
-  const maxValue = Math.max(...data.map((item) => item.value), 1);
-  const areaPoints = data.map((item, index) => {
-    const x = 24 + index * 56;
-    const y = 116 - (item.value / maxValue) * 82;
-    return { ...item, x, y };
-  });
-  const areaPolygon = `24,116 ${areaPoints.map((point) => `${point.x},${point.y}`).join(" ")} 136,116`;
-
-  return (
-    <div className="grid gap-4 rounded-[22px] border border-white/10 bg-slate-950/55 p-4 xl:grid-cols-[0.95fr_260px] xl:items-center">
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Compare</p>
-        <h3 className="mt-1 text-[clamp(1rem,1.6vw,1.15rem)] font-semibold text-white">{title}</h3>
-        <div className="mt-4 grid gap-2.5">
-          {data.map((item) => (
-            <div key={item.label}>
-              <div className="mb-1 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-xs text-slate-300">{item.label}</span>
-                </div>
-                <span className="text-xs font-semibold text-white">{item.value}</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${item.value}%`, backgroundColor: item.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-[20px] border border-white/10 bg-white/[0.02] p-3">
-        <svg viewBox="0 0 160 140" className="h-44 w-full">
-          <defs>
-            <linearGradient id={`compare-area-${title.replace(/\s+/g, "-").toLowerCase()}`} x1="0%" y1="0%" x2="100%" y2="0%">
-              {areaPoints.map((point, index) => (
-                <stop key={point.label} offset={`${(index / Math.max(areaPoints.length - 1, 1)) * 100}%`} stopColor={point.color} />
-              ))}
-            </linearGradient>
-          </defs>
-          <line x1="18" y1="116" x2="142" y2="116" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
-          <line x1="18" y1="34" x2="142" y2="34" stroke="rgba(148,163,184,0.1)" strokeWidth="1" strokeDasharray="3 3" />
-          <polygon points={areaPolygon} fill={`url(#compare-area-${title.replace(/\s+/g, "-").toLowerCase()})`} opacity="0.24" />
-          <polyline
-            points={areaPoints.map((point) => `${point.x},${point.y}`).join(" ")}
-            fill="none"
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
-          {areaPoints.map((point) => (
-            <g key={point.label}>
-              <circle cx={point.x} cy={point.y} r="5" fill={point.color} />
-              <circle cx={point.x} cy={point.y} r="9" fill={point.color} opacity="0.16" />
-              <text x={point.x} y="132" textAnchor="middle" fill="rgba(226,232,240,0.8)" fontSize="8" letterSpacing="1.5">
-                {point.label.slice(0, 3).toUpperCase()}
-              </text>
-            </g>
-          ))}
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function MissionBriefLayer({ city }: { city: CityData }) {
-  const systemDescriptions = [
-    { title: "Climate", text: "Shows how local weather affects the city - heat, rain, wind, and humidity." },
-    { title: "Water", text: "Shows how the city collects, stores, and distributes water." },
-    { title: "Air", text: "Shows pollution levels and air quality across the city." },
-    { title: "Energy", text: "Shows how the city produces and uses electricity." },
-    { title: "Mobility", text: "Shows how people move through the city." },
-    { title: "Waste", text: "Shows how the city manages garbage and recycling." },
-    { title: "Biodiversity", text: "Shows how the city interacts with surrounding ecosystems." },
-  ];
-
-  return (
-    <div className="grid gap-6 pb-6">
-      <section className="relative overflow-hidden rounded-[28px] border border-white/10">
-        <img src={city.missionBriefHeroImage} alt={`${city.city} landscape`} className="h-[320px] w-full object-cover md:h-[420px]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-        <div className="absolute bottom-6 left-6 right-6">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/50">{city.biome}</p>
-          <h2 className="mt-1 font-display text-[clamp(1.8rem,3vw,2.8rem)] text-white drop-shadow-lg">{city.city}</h2>
-        </div>
-      </section>
-
-      <section className="grid gap-4 rounded-[28px] border border-white/10 bg-slate-950/55 p-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Mission Brief</p>
-          <h2 className="mt-2 text-[clamp(1.6rem,2.6vw,2.4rem)] font-semibold text-white">{city.city}</h2>
-          <p className="mt-4 max-w-4xl text-[15px] leading-8 text-slate-200 md:text-lg">{city.missionBriefText}</p>
-        </div>
-      </section>
-
-      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/55">
-        <img src={city.missionBriefStreetImage} alt={`${city.city} street view`} className="h-[300px] w-full object-cover md:h-[380px]" />
-      </section>
-
-      <section className="rounded-[28px] border border-white/10 bg-slate-950/55 p-6">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">City Guide</p>
-        <h3 className="mt-2 text-[clamp(1.3rem,2vw,1.8rem)] font-semibold text-white">What Each System Means</h3>
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {systemDescriptions.map((item) => (
-            <article key={item.title} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-5">
-              <h4 className="text-lg font-semibold text-white">{item.title}</h4>
-              <p className="mt-3 text-sm leading-7 text-slate-300">{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function OverviewLayer({
+function MissionBriefLayer({
   city,
   cities,
-  layerConfig,
-  theme,
-  activeNodeId,
-  onNodeChange,
+  balanceScore,
+  onNavigate,
 }: {
   city: CityData;
   cities: CityData[];
-  layerConfig: (typeof cityLayerConfigs)[CitySlug];
-  theme: (typeof cityThemes)[CitySlug];
-  activeNodeId: string;
-  onNodeChange: (nodeId: string) => void;
+  balanceScore: number;
+  onNavigate: (layer: DashboardLayer) => void;
 }) {
-  const comparisonIds: DashboardMetric["id"][] = ["climate_stress", "water_pressure", "energy_potential"];
+  const signals = citySignals[city.slug];
+  const overview = cityLayerConfigs[city.slug].overview;
+  const otherCities = cities.filter((entry) => entry.slug !== city.slug);
 
   return (
-    <div className="grid gap-3">
-      <section className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr_0.85fr]">
-        <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-5">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">City Overview</p>
-          <h2 className="mt-1 text-[clamp(1.3rem,2.2vw,1.8rem)] font-semibold text-white">{city.city} at a glance</h2>
-          <p className="mt-3 text-sm leading-7 text-slate-300">{city.tagline}</p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {layerConfig.overview.snapshot.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
-                <p className="mt-2 text-sm text-white">{item.value}</p>
-              </div>
-            ))}
+    <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
+      <Panel className="overflow-hidden">
+        <div className="relative min-h-[420px] p-6 md:p-8">
+          <img src={city.missionBriefHeroImage} alt={city.city} className="absolute inset-0 h-full w-full object-cover opacity-35" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(2,6,23,0.9),rgba(2,6,23,0.45),rgba(2,6,23,0.9))]" />
+          <div className="relative z-10 flex h-full flex-col justify-between">
+            <div>
+              <SectionEyebrow>Mission Brief</SectionEyebrow>
+              <h2 className="mt-3 max-w-3xl font-headline text-[clamp(2.4rem,5vw,4.8rem)] leading-[0.92] text-white">
+                {city.investigativePrompt}
+              </h2>
+              <p className="mt-4 max-w-2xl text-base text-slate-200">{city.missionBriefText}</p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <ActionPrompt
+                title="What is happening?"
+                body={signals.critical.detail}
+                buttonLabel="See key signals"
+                onClick={() => onNavigate("key_signals")}
+              />
+              <ActionPrompt
+                title="Why does it matter?"
+                body={`${signals.pressure.detail} ${city.secondaryRisk}`}
+                buttonLabel="Open system map"
+                onClick={() => onNavigate("system_map")}
+              />
+              <ActionPrompt
+                title="What should I do?"
+                body={`Push ${signals.opportunity.headline.toLowerCase()} first and test the effect before scaling.`}
+                buttonLabel="Try interventions"
+                onClick={() => onNavigate("interventions")}
+              />
+            </div>
           </div>
         </div>
-        <RingSummary title="City pressure index" value={city.cityPressureIndex} color={theme.primary} subtitle="Main challenge" />
-        <HorizontalBars data={layerConfig.overview.opportunityScores} title="Top leverage points" subtitle="Opportunities" color={theme.secondary} />
-      </section>
+      </Panel>
 
-      <section className="grid gap-3 xl:grid-cols-[1fr_1fr_0.9fr]">
-        <MultiToneRing
-          data={layerConfig.overview.environmentalTrend}
-          colors={[theme.primary, theme.secondary, "#fbbf24", "#38bdf8"]}
-          title="System snapshot"
-          subtitle="Mixed conditions"
-        />
-        <HorizontalBars data={layerConfig.overview.pressureMix} title="City load balance" subtitle="Overview signals" color={theme.secondary} />
-        <TextStack title="Top tensions" subtitle="What to watch" items={layerConfig.overview.topTensions} />
-      </section>
+      <div className="grid gap-4">
+        <Panel className="p-6">
+          <SectionEyebrow>Current Read</SectionEyebrow>
+          <div className="mt-4 flex flex-wrap items-center gap-5">
+            <ScoreDial value={balanceScore} label="City Balance Score" tone={balanceScore >= 60 ? "stability" : balanceScore >= 40 ? "pressure" : "critical"} />
+            <div className="min-w-[220px] flex-1">
+              <p className="text-sm text-slate-300">
+                This score answers one question: how hard is it for the city to stay in balance right now?
+              </p>
+              <div className="mt-4 grid gap-3">
+                {overview.snapshot.map((item) => (
+                  <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-3">
+                    <p className="text-[10px] uppercase tracking-[0.26em] text-slate-500">{item.label}</p>
+                    <p className="mt-2 text-base text-white">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Panel>
 
-      <section className="grid gap-3">
-        <div className="rounded-[24px] border border-white/10 bg-slate-950/55 p-5">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Cross-city context</p>
-          <h3 className="mt-1 text-[clamp(1.1rem,1.8vw,1.4rem)] font-semibold text-white">How {city.city} compares</h3>
-        </div>
-        {comparisonIds.map((id) => (
-          <CompareMetricCard
-            key={id}
-            data={cities.map((entry) => ({ label: entry.city, value: metricById(entry, id).value, color: entry.themeColor }))}
-            title={metricById(cities[0], id).label}
-          />
-        ))}
-      </section>
-
-      <section className="grid gap-3">
-        <div className="min-h-[360px]">
-          <SystemDependencyMap city={city} activeNodeId={activeNodeId} onNodeChange={onNodeChange} />
-        </div>
-      </section>
+        <Panel className="p-6">
+          <SectionEyebrow>Compare The Cities</SectionEyebrow>
+          <div className="mt-4 grid gap-4">
+            <CompareRow label={city.city} value={balanceScore} color={city.themeColor} />
+            {otherCities.map((entry) => (
+              <CompareRow
+                key={entry.slug}
+                label={entry.city}
+                value={citySignals[entry.slug].resilience_score}
+                color={entry.themeColor}
+              />
+            ))}
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
 
-function bottomCardsForLayer(city: CityData, layerConfig: (typeof cityLayerConfigs)[CitySlug], activeLayer: DashboardLayer) {
-  const climateLookup = Object.fromEntries(city.climateMetrics.map((metric) => [metric.id, metric.value])) as Record<ClimateMetric["id"], number>;
+function KeySignalsLayer({
+  city,
+  cities,
+  balanceScore,
+  onNavigate,
+}: {
+  city: CityData;
+  cities: CityData[];
+  balanceScore: number;
+  onNavigate: (layer: DashboardLayer) => void;
+}) {
+  const signals = citySignals[city.slug];
+  const overview = cityLayerConfigs[city.slug].overview;
 
-  switch (activeLayer) {
-    case "climate":
-      return [
-        { label: "Heat level", value: formatClimateValue("heat", climateLookup.heat), note: "Surface heat stays important across daily life.", tone: "warning" as const },
-        { label: "Rainfall", value: `${climateLookup.rainfall}`, note: "Rain rhythm shapes exposure and seasonal change.", tone: "neutral" as const },
-        { label: "Humidity", value: `${climateLookup.humidity}`, note: "Moisture changes comfort and drying speed.", tone: "neutral" as const },
-        { label: "Comfort", value: `${climateLookup.thermal_comfort}`, note: layerConfig.climate.comfort[0]?.value ?? "Comfort shifts through the year.", tone: "positive" as const },
-      ];
-    case "water":
-      return [
-        { label: "Water load", value: `${metricById(city, "water_pressure").value}`, note: layerConfig.water.riskCards[0]?.value ?? "Water systems stay under pressure.", tone: "warning" as const },
-        { label: "Supply reliability", value: `${layerConfig.water.storageVsDemand[1]?.value ?? 0}`, note: "Reliable supply changes daily resilience.", tone: "positive" as const },
-        { label: "Drainage stress", value: `${layerConfig.water.riskCards[1]?.value ?? ""}`, note: "Storms and runoff affect access and housing.", tone: "neutral" as const },
-        { label: "Linked systems", value: `${layerConfig.water.linkedSystems.length}`, note: layerConfig.water.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "air":
-      return [
-        { label: "Air exposure", value: `${layerConfig.air.airQualityDrivers[0]?.value ?? 0}`, note: layerConfig.air.watchpoints[0]?.value ?? "Air conditions affect comfort.", tone: "warning" as const },
-        { label: "Ventilation", value: `${layerConfig.air.airQualityDrivers[2]?.value ?? 0}`, note: "Air movement can ease pressure in exposed spaces.", tone: "positive" as const },
-        { label: "Indoor load", value: `${layerConfig.air.exposurePattern[1]?.value ?? 0}`, note: "Buildings feel air conditions differently than streets.", tone: "neutral" as const },
-        { label: "Linked systems", value: `${layerConfig.air.linkedSystems.length}`, note: layerConfig.air.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "energy":
-      return [
-        { label: "Active system", value: `${city.activeSystem.score}`, note: city.activeSystem.opportunity, tone: "positive" as const },
-        { label: "Demand load", value: `${layerConfig.energy.generationVsDemand[1]?.value ?? 0}`, note: city.activeSystem.constraint, tone: "warning" as const },
-        { label: "Best source", value: `${layerConfig.energy.sourcePotential[0]?.value ?? 0}`, note: layerConfig.energy.sourcePotential[0]?.label ?? "Source potential", tone: "positive" as const },
-        { label: "Linked systems", value: `${layerConfig.energy.linkedSystems.length}`, note: layerConfig.energy.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "mobility":
-      return [
-        { label: "Route exposure", value: `${layerConfig.mobility.routeExposure[0]?.value ?? 0}`, note: layerConfig.mobility.routines[1]?.value ?? "Routes face daily friction.", tone: "warning" as const },
-        { label: "Walking comfort", value: `${layerConfig.mobility.routeExposure[2]?.value ?? 0}`, note: "Comfort changes how far people can move easily.", tone: "neutral" as const },
-        { label: "Access factors", value: `${layerConfig.mobility.accessFactors[0]?.value ?? 0}`, note: "Terrain and weather shape movement patterns.", tone: "neutral" as const },
-        { label: "Linked systems", value: `${layerConfig.mobility.linkedSystems.length}`, note: layerConfig.mobility.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "waste":
-      return [
-        { label: "Unrecycled", value: `${layerConfig.waste.recyclingMix.find((item) => item.label === "Unrecycled")?.value ?? 0}%`, note: "This shows waste still escaping the recovery loop.", tone: "warning" as const },
-        { label: "Organic share", value: `${layerConfig.waste.recyclingMix.find((item) => item.label === "Organic")?.value ?? 0}%`, note: "Organic material can return through safer handling.", tone: "positive" as const },
-        { label: "Handling stress", value: `${layerConfig.waste.handlingPressure[0]?.value ?? 0}`, note: layerConfig.waste.watchpoints[0]?.value ?? "Waste handling stays exposed.", tone: "warning" as const },
-        { label: "Linked systems", value: `${layerConfig.waste.linkedSystems.length}`, note: layerConfig.waste.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "biodiversity":
-      return [
-        { label: "Sensitivity", value: `${metricById(city, "ecosystem_sensitivity").value}`, note: layerConfig.biodiversity.preservation[0]?.value ?? "Ecology stays highly responsive.", tone: "warning" as const },
-        { label: "Composting", value: `${layerConfig.biodiversity.compostLoop[1]?.value ?? 0}`, note: "Organic return helps connect food and soil again.", tone: "positive" as const },
-        { label: "Habitat stress", value: `${layerConfig.biodiversity.habitatPressure[1]?.value ?? 0}`, note: layerConfig.biodiversity.preservation[1]?.value ?? "Habitat edges need careful attention.", tone: "warning" as const },
-        { label: "Linked systems", value: `${layerConfig.biodiversity.linkedSystems.length}`, note: layerConfig.biodiversity.linkedSystems.join(", "), tone: "neutral" as const },
-      ];
-    case "mission_brief":
-      return [
-        { label: "Biome", value: city.biome, note: "This is the main environmental setting for the city.", tone: "neutral" as const },
-        { label: "Top challenge", value: city.primaryRisk, note: city.secondaryRisk, tone: "warning" as const },
-        { label: "Best opportunity", value: city.activeSystem.name, note: city.activeSystem.opportunity, tone: "positive" as const },
-        { label: "City pressure", value: `${city.cityPressureIndex}`, note: "A quick signal for how difficult planning may feel here.", tone: "neutral" as const },
-      ];
-    case "overview":
-      return [
-        { label: "Cities", value: `${3}`, note: "Solara, Frostara and Verdantia stay aligned here.", tone: "neutral" as const },
-        { label: "Shared metrics", value: `${5}`, note: "The same five top signals are compared side by side.", tone: "positive" as const },
-        { label: "Use", value: "Context", note: "Compare patterns before discussing tradeoffs in class.", tone: "neutral" as const },
-        { label: "Focus", value: "Differences", note: "Look for the hardest mix of pressure and opportunity.", tone: "warning" as const },
-      ];
-    default:
-      return [
-        { label: "City pressure", value: `${city.cityPressureIndex}`, note: "Overall planning difficulty across connected systems.", tone: "warning" as const },
-        { label: "Urban stress", value: `${city.urbanStress}`, note: "How hard daily city life may feel under these conditions.", tone: "neutral" as const },
-        { label: "Active system", value: `${city.activeSystem.score}`, note: city.activeSystem.opportunity, tone: "positive" as const },
-        { label: "Primary risk", value: city.primaryRisk, note: city.secondaryRisk, tone: "warning" as const },
-      ];
-  }
+  return (
+    <div className="grid gap-4">
+      <Panel className="p-6">
+        <SectionTitle
+          title="The city is telling you where to look first."
+          subtitle="Signals replace neutral metrics. Each one points to a tension, a reason, and a move you can test."
+        />
+        <div className="grid gap-4 xl:grid-cols-3">
+          <SignalCard tone="critical" signal={signals.critical} onClick={() => onNavigate(signals.critical.system as DashboardLayer)} />
+          <SignalCard tone="pressure" signal={signals.pressure} onClick={() => onNavigate(signals.pressure.system as DashboardLayer)} />
+          <SignalCard tone="opportunity" signal={signals.opportunity} onClick={() => onNavigate(signals.opportunity.system as DashboardLayer)} />
+        </div>
+      </Panel>
+
+      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <Panel className="p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <SectionEyebrow>Top Tensions</SectionEyebrow>
+              <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Where the city is pulling against itself</h3>
+            </div>
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-slate-400">
+              Balance score {balanceScore}
+            </span>
+          </div>
+          <div className="grid gap-3">
+            {signals.tensions.map((tension) => (
+              <TensionCard key={`${tension.a}-${tension.b}`} tension={tension} />
+            ))}
+          </div>
+        </Panel>
+
+        <Panel className="p-6">
+          <SectionEyebrow>Leverage Points</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.6rem,3vw,2.2rem)] leading-none text-white">Where one move can change many systems</h3>
+          <div className="mt-5 grid gap-3">
+            {signals.leverage_points.map((point) => (
+              <LeverageCard key={point.name} point={point} />
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Panel className="p-6">
+          <SectionEyebrow>Pressure Mix</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">What this city struggles with compared with the others</h3>
+          <div className="mt-5 grid gap-4">
+            {overview.pressureMix.map((item) => (
+              <PressureCompare key={item.label} label={item.label} current={item.value} cities={cities} city={city} />
+            ))}
+          </div>
+        </Panel>
+
+        <Panel className="p-6">
+          <SectionEyebrow>Best Next Step</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.4vw,2rem)] text-white">You do not need to fix everything at once.</h3>
+          <p className="mt-3 text-sm text-slate-300">
+            Start with the strongest leverage point, then check the system map to see what it touches before you simulate it.
+          </p>
+          <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Recommended first move</p>
+            <p className="mt-3 text-2xl text-white">{signals.leverage_points[0]?.name}</p>
+            <p className="mt-2 text-sm text-slate-300">{signals.leverage_points[0]?.why}</p>
+            <button
+              type="button"
+              onClick={() => onNavigate("impact_simulator")}
+              className="mt-5 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
+            >
+              Simulate this move
+            </button>
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function SystemNarrativeLayer({
+  city,
+  layer,
+  onNavigate,
+}: {
+  city: CityData;
+  layer: SystemLayer;
+  onNavigate: (layer: DashboardLayer) => void;
+}) {
+  const meta = systemLayers.find((entry) => entry.id === layer) ?? systemLayers[0];
+  const config = cityLayerConfigs[city.slug][layer];
+  const metricValue = metricById(city, meta.linkedMetric).value;
+  const tone = signalStyles[meta.tone];
+  const primarySeries =
+    "distribution" in config
+      ? config.distribution
+      : "storageVsDemand" in config
+        ? config.storageVsDemand
+        : "airQualityDrivers" in config
+          ? config.airQualityDrivers
+          : "generationVsDemand" in config
+            ? config.generationVsDemand
+            : "routeExposure" in config
+              ? config.routeExposure
+              : "wasteFlow" in config
+                ? config.wasteFlow
+                : config.habitatPressure;
+  const secondarySeries =
+    "comfort" in config
+      ? config.comfort.map((item) => ({ label: item.label, value: item.value }))
+      : "riskCards" in config
+        ? config.riskCards.map((item) => ({ label: item.label, value: item.value }))
+        : "watchpoints" in config
+          ? config.watchpoints.map((item) => ({ label: item.label, value: item.value }))
+          : "thermalLinks" in config
+            ? config.thermalLinks.map((item) => ({ label: item.label, value: item.value }))
+            : "routines" in config
+              ? config.routines.map((item) => ({ label: item.label, value: item.value }))
+              : "preservation" in config
+                ? config.preservation.map((item) => ({ label: item.label, value: item.value }))
+                : [];
+  const linkedSystems = "linkedSystems" in config ? config.linkedSystems : [];
+
+  return (
+    <div className="grid gap-4">
+      <Panel className="p-6">
+        <SectionTitle title={meta.question} subtitle={meta.summary} />
+        <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+          <div className="rounded-[24px] border p-5" style={{ borderColor: tone.border, background: tone.bg }}>
+            <p className="text-[10px] uppercase tracking-[0.26em]" style={{ color: tone.color }}>
+              System reading
+            </p>
+            <p className="mt-4 font-display text-[4rem] leading-none text-white">{metricValue}</p>
+            <p className="mt-2 text-sm text-slate-300">
+              {meta.tone === "opportunity"
+                ? "Higher means this city has more room to turn this system into an advantage."
+                : "Higher means this system is creating more pressure on everyday life."}
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigate("impact_simulator")}
+              className="mt-5 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-black/30"
+            >
+              Test this in the simulator
+            </button>
+          </div>
+          <RelationalChart
+            title="What is driving this system?"
+            subtitle="These forces pull the system toward pressure or possibility."
+            items={primarySeries}
+            color={tone.color}
+          />
+        </div>
+      </Panel>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Panel className="p-6">
+          <SectionEyebrow>Why It Matters</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">This system never acts alone.</h3>
+          <div className="mt-5 grid gap-3">
+            {secondarySeries.map((item) => (
+              <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                <p className="mt-2 text-sm text-slate-200">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel className="p-6">
+          <SectionEyebrow>Cause And Effect</SectionEyebrow>
+          <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">If this system changes, these systems move with it.</h3>
+          <div className="mt-5 grid gap-3">
+            {linkedSystems.map((linked) => (
+              <div key={linked} className="flex items-start justify-between gap-3 rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
+                <div>
+                  <p className="text-sm text-white">{linked}</p>
+                  <p className="mt-1 text-sm text-slate-400">This system is directly affected when {meta.shortLabel.toLowerCase()} improves or fails.</p>
+                </div>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-slate-400">
+                  linked
+                </span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function InterventionCard({
+  intervention,
+  value,
+  onToggle,
+  onChange,
+}: {
+  intervention: Intervention;
+  value: number;
+  onToggle: () => void;
+  onChange: (value: number) => void;
+}) {
+  const tone = signalStyles[
+    intervention.signalType === "critical" ? "critical" : intervention.signalType === "pressure" ? "pressure" : "opportunity"
+  ];
+
+  return (
+    <Panel className="p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: tone.color }}>
+            {tone.label}
+          </p>
+          <h3 className="mt-2 text-2xl text-white">{intervention.name}</h3>
+          <p className="mt-1 text-sm text-slate-400">{intervention.tagline}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="rounded-full border border-white/15 px-3 py-1.5 text-[10px] uppercase tracking-[0.24em] text-white transition"
+          style={{ background: value > 0 ? tone.bg : "rgba(255,255,255,0.03)" }}
+        >
+          {value > 0 ? "Active" : "Enable"}
+        </button>
+      </div>
+
+      <p className="mt-4 text-sm text-slate-300">{intervention.description}</p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <StatChip label="Effort" value={readableEffort[intervention.effort]} />
+        <StatChip label="Timeframe" value={intervention.timeframe.replace(/â€“/g, "-")} />
+        <StatChip label="Impact" value={`${intervention.impactScore}`} />
+      </div>
+
+      <div className="mt-5">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="text-sm text-slate-300">Intervention strength</p>
+          <p className="text-sm font-semibold text-white">{value}%</p>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="10"
+          value={value}
+          onChange={(event) => onChange(Number(event.target.value))}
+          className="aurora-range w-full"
+        />
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {intervention.systemsHelped.map((system) => (
+          <span key={system} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] uppercase tracking-[0.22em] text-slate-300">
+            {system}
+          </span>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function InterventionsLayer({
+  city,
+  selected,
+  onToggle,
+  onIntensityChange,
+  onNavigate,
+}: {
+  city: CityData;
+  selected: Record<string, number>;
+  onToggle: (id: string) => void;
+  onIntensityChange: (id: string, value: number) => void;
+  onNavigate: (layer: DashboardLayer) => void;
+}) {
+  const interventions = cityInterventions[city.slug];
+  const activeCount = interventions.filter((item) => selected[item.id] > 0).length;
+
+  return (
+    <div className="grid gap-4">
+      <Panel className="p-6">
+        <SectionTitle
+          title="Choose a city move, not just a metric."
+          subtitle="Each intervention is a design decision. Turn one on, tune its strength, then test the tradeoffs."
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusPill tone="opportunity" label={`${activeCount} active interventions`} />
+          <StatusPill tone="pressure" label="Hover cards to understand tradeoffs" />
+          <StatusPill tone="stability" label="Next step: run the simulator" />
+        </div>
+      </Panel>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {interventions.map((intervention) => (
+          <InterventionCard
+            key={intervention.id}
+            intervention={intervention}
+            value={selected[intervention.id] ?? 0}
+            onToggle={() => onToggle(intervention.id)}
+            onChange={(value) => onIntensityChange(intervention.id, value)}
+          />
+        ))}
+      </div>
+
+      <Panel className="p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <SectionEyebrow>Ready To Test</SectionEyebrow>
+            <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">See whether your package actually helps the city.</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate("impact_simulator")}
+            className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.1]"
+          >
+            Open impact simulator
+          </button>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function BeforeAfterRow({
+  label,
+  current,
+  next,
+  positive,
+}: {
+  label: string;
+  current: number;
+  next: number;
+  positive: boolean;
+}) {
+  const gotBetter = positive ? next >= current : next <= current;
+  const color = gotBetter ? "#51d88a" : "#ff6b6b";
+
+  return (
+    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <p className="text-sm text-white">{label}</p>
+        <span className="text-sm font-semibold" style={{ color }}>
+          {formatDelta(next - current)}
+        </span>
+      </div>
+      <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <MetricBar label="Now" value={current} color="rgba(148,163,184,0.7)" />
+        <span className="text-center text-sm text-slate-500">to</span>
+        <MetricBar label="After" value={next} color={color} />
+      </div>
+    </div>
+  );
+}
+
+function ImpactSimulatorLayer({
+  city,
+  selected,
+}: {
+  city: CityData;
+  selected: Record<string, number>;
+}) {
+  const interventions = cityInterventions[city.slug];
+  const activeInterventions = interventions.filter((item) => (selected[item.id] ?? 0) > 0);
+  const baseMetrics = city.dashboardMetrics.reduce<Record<DashboardMetric["id"], number>>((acc, metric) => {
+    acc[metric.id] = metric.value;
+    return acc;
+  }, {} as Record<DashboardMetric["id"], number>);
+
+  const simulatedMetrics = activeInterventions.reduce<Record<DashboardMetric["id"], number>>((acc, intervention) => {
+    const intensity = (selected[intervention.id] ?? 0) / 100;
+    const strength = intensity * (intervention.impactScore / 100);
+
+    intervention.systemsHelped.forEach((system) => {
+      const vector = impactVectors[system];
+      if (!vector) {
+        return;
+      }
+
+      Object.entries(vector).forEach(([metricId, delta]) => {
+        acc[metricId as DashboardMetric["id"]] = clamp(acc[metricId as DashboardMetric["id"]] + delta * strength);
+      });
+    });
+
+    return acc;
+  }, { ...baseMetrics });
+
+  const baseBalance = citySignals[city.slug].resilience_score;
+  const pressureShift =
+    (baseMetrics.climate_stress - simulatedMetrics.climate_stress) * 0.18 +
+    (baseMetrics.water_pressure - simulatedMetrics.water_pressure) * 0.28 +
+    (simulatedMetrics.energy_potential - baseMetrics.energy_potential) * 0.24 +
+    (baseMetrics.ecosystem_sensitivity - simulatedMetrics.ecosystem_sensitivity) * 0.18 +
+    (baseMetrics.mobility_complexity - simulatedMetrics.mobility_complexity) * 0.12;
+  const simulatedBalance = clamp(baseBalance + pressureShift);
+  const successRate = activeInterventions.length === 0 ? 0 : clamp((simulatedBalance - baseBalance) * 4.5 + 50);
+
+  const changes = city.dashboardMetrics.map((metric) => ({
+    ...metric,
+    next: simulatedMetrics[metric.id],
+  }));
+
+  const consequenceLines =
+    activeInterventions.length === 0
+      ? ["No intervention is active yet, so the city stays on its current path."]
+      : [
+          `${activeInterventions[0]?.name} is the main driver of change right now.`,
+          simulatedMetrics.water_pressure < baseMetrics.water_pressure
+            ? "Water pressure drops, which makes the city easier to stabilize."
+            : "Water pressure is still high, so survival remains difficult during shocks.",
+          simulatedMetrics.energy_potential > baseMetrics.energy_potential
+            ? "Energy becomes more useful as a leverage system instead of only a demand problem."
+            : "Energy is not improving enough to unlock wider system gains yet.",
+        ];
+
+  return (
+    <div className="grid gap-4">
+      <Panel className="p-6">
+        <SectionTitle
+          title="See the city react before you commit."
+          subtitle="This simulator turns your intervention package into a predicted shift in pressure, opportunity, and city balance."
+        />
+        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+            <SectionEyebrow>Scenario Result</SectionEyebrow>
+            <div className="mt-4 flex flex-wrap items-center gap-6">
+              <ScoreDial value={simulatedBalance} label="Projected balance" tone={simulatedBalance >= baseBalance ? "stability" : "critical"} />
+              <div className="grid gap-3">
+                <StatChip label="Current score" value={`${baseBalance}`} />
+                <StatChip label="Projected shift" value={formatDelta(simulatedBalance - baseBalance)} />
+                <StatChip label="Success rate" value={`${successRate}%`} />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+            <SectionEyebrow>Consequence Readout</SectionEyebrow>
+            <div className="mt-4 grid gap-3">
+              {consequenceLines.map((line) => (
+                <div key={line} className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-200">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Panel>
+
+      <Panel className="p-6">
+        <SectionEyebrow>Before Vs After</SectionEyebrow>
+        <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">What shifts when your plan goes live</h3>
+        <div className="mt-5 grid gap-4">
+          {changes.map((item) => (
+            <BeforeAfterRow
+              key={item.id}
+              label={item.label}
+              current={item.value}
+              next={item.next}
+              positive={item.id === "energy_potential"}
+            />
+          ))}
+        </div>
+      </Panel>
+
+      <Panel className="p-6">
+        <SectionEyebrow>Active Package</SectionEyebrow>
+        <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">The interventions shaping this scenario</h3>
+        <div className="mt-5 grid gap-3 xl:grid-cols-3">
+          {activeInterventions.length > 0 ? (
+            activeInterventions.map((intervention) => (
+              <div key={intervention.id} className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-lg text-white">{intervention.name}</p>
+                <p className="mt-2 text-sm text-slate-300">{intervention.description}</p>
+                <p className="mt-4 text-[10px] uppercase tracking-[0.24em] text-slate-500">Strength {selected[intervention.id]}%</p>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-[22px] border border-dashed border-white/15 bg-white/[0.02] p-5 text-sm text-slate-300 xl:col-span-3">
+              Activate at least one intervention to generate a meaningful scenario.
+            </div>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function StatusStripCard({
+  tone,
+  title,
+  text,
+  detail,
+}: {
+  tone: SignalTone;
+  title: string;
+  text: string;
+  detail: string;
+}) {
+  const style = signalStyles[tone];
+
+  return (
+    <Panel className="p-4" style={{ background: `linear-gradient(180deg, ${style.bg}, rgba(2,6,23,0.22))` }}>
+      <p className="text-[10px] uppercase tracking-[0.28em]" style={{ color: style.color }}>
+        {title}
+      </p>
+      <h3 className="mt-3 text-xl text-white">{text}</h3>
+      <p className="mt-2 text-sm text-slate-300">{detail}</p>
+    </Panel>
+  );
+}
+
+function SidebarContent({
+  activeLayer,
+  focusedSystem,
+  onSelectLayer,
+  onClose,
+}: {
+  activeLayer: DashboardLayer;
+  focusedSystem: SystemLayer;
+  onSelectLayer: (layer: DashboardLayer) => void;
+  onClose?: () => void;
+}) {
+  return (
+    <Panel className="h-full overflow-auto p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <SectionEyebrow>Thinking Flow</SectionEyebrow>
+          <h2 className="mt-2 font-headline text-[clamp(1.4rem,2vw,1.8rem)] text-white">Navigate by decisions</h2>
+        </div>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white"
+            aria-label="Close navigation"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
+
+      <div className="grid gap-2">
+        {sidebarEntries.map((entry) =>
+          entry.id === "explore_systems" ? (
+            <div key={entry.id} className="rounded-[24px] border border-white/10 bg-white/[0.02] p-3">
+              <div className="mb-3 flex items-center gap-3 px-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+                  {iconFor(entry.icon, false)}
+                </div>
+                <div>
+                  <p className="text-sm text-white">{entry.label}</p>
+                  <p className="text-xs text-slate-500">{entry.hint}</p>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                {systemLayers.map((system) => (
+                  <MiniSystemButton
+                    key={system.id}
+                    system={system}
+                    active={activeLayer === system.id || focusedSystem === system.id}
+                    onClick={() => onSelectLayer(system.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <SidebarSection
+              key={entry.id}
+              entry={entry}
+              active={activeLayer === entry.id}
+              onClick={() => onSelectLayer(entry.id as DashboardLayer)}
+            />
+          ),
+        )}
+      </div>
+    </Panel>
+  );
 }
 
 export function CityDashboard({ city, cities, onBack, onSelectCity }: CityDashboardProps) {
   const theme = cityThemes[city.slug];
-  const layerConfig = cityLayerConfigs[city.slug];
+  const signals = citySignals[city.slug];
   const [activeLayer, setActiveLayer] = useState<DashboardLayer>("mission_brief");
-  const [activeNodeId, setActiveNodeId] = useState("energy");
+  const [focusedSystem, setFocusedSystem] = useState<SystemLayer>(signals.critical.system as SystemLayer);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedInterventions, setSelectedInterventions] = useState<Record<string, number>>(
+    Object.fromEntries(cityInterventions[city.slug].map((intervention, index) => [intervention.id, index === 0 ? 70 : 0])),
+  );
 
-  useEffect(() => {
-    setActiveNodeId((current) => {
-      if (activeLayer === "water") {
-        return "water";
-      }
-      if (activeLayer === "mobility") {
-        return "mobility";
-      }
-      if (activeLayer === "air" || activeLayer === "waste") {
-        return "housing";
-      }
-      if (activeLayer === "biodiversity") {
-        return "biodiversity";
-      }
-      return current === "food" ? "food" : "energy";
-    });
-  }, [city.slug]);
+  const balanceScore = signals.resilience_score;
+  const cityTone: SignalTone = balanceScore >= 65 ? "stability" : balanceScore >= 45 ? "pressure" : "critical";
 
-  useEffect(() => {
+  const handleLayerChange = (layer: DashboardLayer) => {
+    if (systemLayers.some((entry) => entry.id === layer)) {
+      setFocusedSystem(layer as SystemLayer);
+    }
+    setActiveLayer(layer);
     setSidebarOpen(false);
-  }, [city.slug, activeLayer]);
+  };
 
-  const renderMainLayer = () => {
+  const toggleIntervention = (id: string) => {
+    setSelectedInterventions((current) => ({ ...current, [id]: current[id] > 0 ? 0 : 70 }));
+  };
+
+  const updateIntervention = (id: string, value: number) => {
+    setSelectedInterventions((current) => ({ ...current, [id]: value }));
+  };
+
+  const currentLayerLabel = useMemo(() => {
+    if (systemLayers.some((entry) => entry.id === activeLayer)) {
+      return `Explore Systems / ${systemLayers.find((entry) => entry.id === activeLayer)?.label}`;
+    }
+    return sidebarEntries.find((entry) => entry.id === activeLayer)?.label ?? "Mission Brief";
+  }, [activeLayer]);
+
+  const renderActiveLayer = () => {
     switch (activeLayer) {
       case "mission_brief":
-        return <MissionBriefLayer city={city} />;
-      case "overview":
-        return <OverviewLayer city={city} cities={cities} layerConfig={layerConfig} theme={theme} activeNodeId={activeNodeId} onNodeChange={setActiveNodeId} />;
-      case "climate":
-        return <ClimatePanel city={city} metrics={city.climateMetrics} color={theme.primary} />;
-      case "water":
+        return <MissionBriefLayer city={city} cities={cities} balanceScore={balanceScore} onNavigate={handleLayerChange} />;
+      case "key_signals":
+        return <KeySignalsLayer city={city} cities={cities} balanceScore={balanceScore} onNavigate={handleLayerChange} />;
+      case "system_map":
         return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <RingSummary title="Water system load" value={metricById(city, "water_pressure").value} color={theme.primary} subtitle="Main gauge" />
-            <HorizontalBars data={layerConfig.water.storageVsDemand} title="Storage vs demand" subtitle="Water balance" color={theme.secondary} />
-            <LineChart data={layerConfig.water.seasonalBalance} color={theme.primary} title="Seasonal water balance" subtitle="Water cycle" />
+          <div className="grid gap-4">
+            <Panel className="p-6">
+              <SectionTitle
+                title="The city behaves like a web, not a stack of separate cards."
+                subtitle="Hover or click a node to see how one pressure spreads across the rest of urban life."
+              />
+              <SystemDependencyMap city={city} activeNodeId={focusedSystem} onNodeChange={(nodeId) => setFocusedSystem(nodeId as SystemLayer)} />
+            </Panel>
+            <Panel className="p-6">
+              <SectionEyebrow>Next Step</SectionEyebrow>
+              <h3 className="mt-2 font-headline text-[clamp(1.5rem,2.3vw,2rem)] text-white">Open the most fragile system, then test an intervention.</h3>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {systemLayers.map((system) => (
+                  <button
+                    key={system.id}
+                    type="button"
+                    onClick={() => handleLayerChange(system.id)}
+                    className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.08]"
+                  >
+                    {system.label}
+                  </button>
+                ))}
+              </div>
+            </Panel>
           </div>
         );
-      case "air":
+      case "interventions":
         return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <HorizontalBars data={layerConfig.air.airQualityDrivers} title="Air quality drivers" subtitle="Exposure profile" color={theme.primary} />
-            <HorizontalBars data={layerConfig.air.exposurePattern} title="Exposure pattern" subtitle="Comfort and material load" color={theme.secondary} />
-          </div>
+          <InterventionsLayer
+            city={city}
+            selected={selectedInterventions}
+            onToggle={toggleIntervention}
+            onIntensityChange={updateIntervention}
+            onNavigate={handleLayerChange}
+          />
         );
-      case "energy":
-        return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <HorizontalBars data={layerConfig.energy.generationVsDemand} title="Generation vs demand" subtitle="Energy profile" color={theme.primary} />
-            <HorizontalBars data={layerConfig.energy.sourcePotential} title="Source potential" subtitle="Energy sources" color={theme.secondary} />
-          </div>
-        );
-      case "mobility":
-        return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <HorizontalBars data={layerConfig.mobility.routeExposure} title="Route exposure" subtitle="Movement friction" color={theme.primary} />
-            <HorizontalBars data={layerConfig.mobility.accessFactors} title="Access complexity" subtitle="Access factors" color={theme.secondary} />
-          </div>
-        );
-      case "waste":
-        return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <HorizontalBars data={layerConfig.waste.wasteFlow} title="Waste flow" subtitle="Collection and recovery" color={theme.primary} />
-            <HorizontalBars data={layerConfig.waste.handlingPressure} title="Handling pressure" subtitle="Operational stress" color={theme.secondary} />
-            <RecyclingPieChart
-              title="Recycling mix"
-              subtitle="What can return to the cycle"
-              data={layerConfig.waste.recyclingMix}
-              colors={[theme.primary, theme.secondary, "#fbbf24", "#38bdf8", "#a3e635", "#f87171"]}
-            />
-          </div>
-        );
-      case "biodiversity":
-        return (
-          <div className="grid gap-3 xl:grid-cols-2">
-            <RingSummary title="Ecosystem sensitivity" value={metricById(city, "ecosystem_sensitivity").value} color={theme.primary} subtitle="Ecology score" />
-            <HorizontalBars data={layerConfig.biodiversity.habitatPressure} title="Habitat pressure" subtitle="Ecological stress" color={theme.secondary} />
-            <HorizontalBars data={layerConfig.biodiversity.coexistence} title="Coexistence with infrastructure" subtitle="Relationship chart" color={theme.primary} />
-            <OrganicReturnChart
-              title="Organic return loop"
-              subtitle="Composting and soil return"
-              data={layerConfig.biodiversity.compostLoop}
-              color={theme.secondary}
-            />
-          </div>
-        );
+      case "impact_simulator":
+        return <ImpactSimulatorLayer city={city} selected={selectedInterventions} />;
       default:
-        return null;
+        return <SystemNarrativeLayer city={city} layer={activeLayer as SystemLayer} onNavigate={handleLayerChange} />;
     }
   };
 
-  const bottomCards = bottomCardsForLayer(city, layerConfig, activeLayer);
-
   return (
-    <div className="h-screen overflow-hidden p-2 md:p-3">
-      <div className="mx-auto grid h-full max-w-[1720px] grid-rows-[auto_1fr] p-2 md:p-3">
-        <header className="grid gap-3 rounded-[24px] border border-white/10 bg-slate-950/55 px-4 py-3 xl:grid-cols-[1fr_auto] xl:items-center">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
+    <div className="min-h-screen overflow-hidden p-3">
+      <div className="dashboard-shell aurora-grid mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1780px] grid-rows-[auto_1fr] rounded-[32px] border border-white/10 p-3 shadow-aurora">
+        <header className="rounded-[28px] border border-white/10 bg-slate-950/40 px-4 py-4 md:px-6">
+          <div className="flex flex-wrap items-start gap-4">
             <button
               type="button"
               onClick={() => setSidebarOpen((current) => !current)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.08] lg:hidden"
-              aria-label="Toggle layers menu"
+              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-white lg:hidden"
+              aria-label="Toggle navigation"
             >
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
-            <img src={cityLogos[city.slug]} alt={`${city.city} logo`} className="h-10 w-10 shrink-0 object-contain" />
-            <div className="min-w-0">
-              <h1 className="truncate font-display text-[clamp(1.5rem,2.4vw,2rem)] text-white">{city.city}</h1>
-              <p className="truncate text-sm text-slate-400">{city.tagline}</p>
-              <p className="mt-0.5 text-[11px] uppercase tracking-[0.22em] text-slate-600">{layers.find((l) => l.id === activeLayer)?.label}</p>
+
+            <div className="flex min-w-0 flex-1 items-start gap-4">
+              <img src={cityLogos[city.slug]} alt={city.city} className="mt-1 h-12 w-12 shrink-0 object-contain" />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[10px] uppercase tracking-[0.34em] text-slate-500">Aurora Project</p>
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.26em] text-slate-400">
+                    {city.biome}
+                  </span>
+                </div>
+                <h1 className="mt-2 font-headline text-[clamp(2.2rem,4vw,4rem)] leading-none text-white">{city.city}</h1>
+                <p className="mt-2 max-w-3xl text-sm text-slate-300">{city.tagline}</p>
+                <p className="mt-2 text-[11px] uppercase tracking-[0.24em] text-slate-500">{currentLayerLabel}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={onBack}
+                className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white transition hover:bg-white/[0.08]"
+              >
+                Back to cities
+              </button>
+              {cities.map((entry) => (
+                <button
+                  key={entry.slug}
+                  type="button"
+                  onClick={() => onSelectCity(entry.slug)}
+                  className="rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.22em] transition"
+                  style={{
+                    borderColor: entry.slug === city.slug ? theme.secondary : "rgba(255,255,255,0.1)",
+                    background: entry.slug === city.slug ? `${theme.primary}24` : "rgba(255,255,255,0.03)",
+                    color: "#fff",
+                  }}
+                >
+                  {entry.city}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white transition hover:bg-white/[0.12]"
-            >
-              Cities
-            </button>
-            {cities.map((entry) => (
-              <button
-                key={entry.slug}
-                type="button"
-                onClick={() => onSelectCity(entry.slug)}
-                className={`rounded-full border px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] transition ${
-                  entry.slug === city.slug ? "text-white" : "border-white/10 bg-white/[0.03] text-slate-400 hover:text-white"
-                }`}
-                style={entry.slug === city.slug ? { borderColor: theme.secondary, backgroundColor: `${theme.primary}22` } : undefined}
-              >
-                {entry.city}
-              </button>
-            ))}
+          <div className="mt-5 grid gap-3 xl:grid-cols-[1.2fr_1.2fr_1.2fr_0.9fr]">
+            <StatusStripCard tone="critical" title="Critical issue" text={signals.critical.headline} detail={signals.critical.detail} />
+            <StatusStripCard tone="pressure" title="Main pressure" text={signals.pressure.headline} detail={signals.pressure.detail} />
+            <StatusStripCard tone="opportunity" title="Best opportunity" text={signals.opportunity.headline} detail={signals.opportunity.detail} />
+            <Panel className="flex items-center justify-center p-4">
+              <ScoreDial value={balanceScore} label="City Balance Score" tone={cityTone} />
+            </Panel>
           </div>
         </header>
 
         {sidebarOpen ? (
-          <div className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden">
-            <div className="h-full w-[min(82vw,320px)] rounded-r-[28px] border-r border-white/10 bg-slate-950/95 p-4 shadow-aurora">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Layers</p>
-                  <p className="mt-1 text-lg font-semibold text-white">City modules</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.08]"
-                  aria-label="Close layers menu"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="m6 6 12 12M18 6 6 18" />
-                  </svg>
-                </button>
-              </div>
-              <div className="grid gap-2">
-                {layers.map((layer) => {
-                  const active = activeLayer === layer.id;
-                  return (
-                    <button
-                      key={`mobile-${layer.id}`}
-                      type="button"
-                      onClick={() => {
-                        setActiveLayer(layer.id);
-                        if (layer.nodeId) {
-                          setActiveNodeId(layer.nodeId);
-                        }
-                      }}
-                      className="flex items-center gap-3 rounded-[18px] border border-transparent px-3 py-3 text-left transition hover:border-white/10 hover:bg-white/[0.04]"
-                      style={active ? { backgroundColor: `${theme.primary}20`, borderColor: theme.secondary } : undefined}
-                    >
-                      <SidebarIcon icon={layer.icon} active={active} />
-                      <p className={`text-sm ${active ? "text-white" : "text-slate-300"}`}>{layer.label}</p>
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden">
+            <div className="h-full w-[min(88vw,360px)] border-r border-white/10 bg-slate-950/95 p-4">
+              <SidebarContent activeLayer={activeLayer} focusedSystem={focusedSystem} onClose={() => setSidebarOpen(false)} onSelectLayer={handleLayerChange} />
             </div>
           </div>
         ) : null}
 
-        <div className="grid min-h-0 gap-3 pt-3 lg:grid-cols-[minmax(210px,240px)_minmax(0,1fr)]">
-          <aside className="sticky top-0 hidden max-h-full self-start overflow-auto rounded-[24px] border border-white/10 bg-slate-950/55 p-3 lg:block">
-            <div className="grid gap-2">
-              {layers.map((layer) => {
-                const active = activeLayer === layer.id;
-                return (
-                  <button
-                    key={layer.id}
-                    type="button"
-                    onClick={() => {
-                        setActiveLayer(layer.id);
-                        if (layer.nodeId) {
-                          setActiveNodeId(layer.nodeId);
-                        }
-                      }}
-                    className="flex items-center gap-3 rounded-[18px] border border-transparent px-3 py-3 text-left transition hover:border-white/10 hover:bg-white/[0.04]"
-                    style={active ? { backgroundColor: `${theme.primary}20`, borderColor: theme.secondary } : undefined}
-                  >
-                    <SidebarIcon icon={layer.icon} active={active} />
-                    <div className="min-w-0">
-                      <p className={`truncate text-sm ${active ? "text-white" : "text-slate-300"}`}>{layer.label}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+        <div className="grid min-h-0 gap-4 pt-4 lg:grid-cols-[290px_minmax(0,1fr)]">
+          <aside className="hidden min-h-0 lg:block">
+            <SidebarContent activeLayer={activeLayer} focusedSystem={focusedSystem} onSelectLayer={handleLayerChange} />
           </aside>
-
-          <main className="scrollbar-thin min-h-0 overflow-auto pr-1">
-            {activeLayer === "overview" ? <CompactMetricRow metrics={city.dashboardMetrics} color={theme.primary} /> : null}
-            <div className={`${activeLayer === "overview" ? "mt-3" : ""} grid gap-3`}>
-              {renderMainLayer()}
-            </div>
-            <div className="mt-4">
-              <BottomInsightCards cards={bottomCards} />
-            </div>
-          </main>
+          <main className="scrollbar-thin min-h-0 overflow-auto pr-1">{renderActiveLayer()}</main>
         </div>
       </div>
     </div>
