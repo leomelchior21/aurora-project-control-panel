@@ -29,13 +29,13 @@ function HeatmapBlock({ chart }: { chart: ChartSpec }) {
   return (
     <div className={isSectorMatrix ? "grid gap-4" : "grid gap-3"}>
       {chart.rows?.map((row) => (
-        <div key={row.label} className={isSectorMatrix ? "grid grid-cols-[120px_1fr] items-center gap-4" : "grid grid-cols-[96px_1fr] items-center gap-3"}>
+        <div key={row.label} className={isSectorMatrix ? "grid grid-cols-[92px_1fr] items-center gap-3" : "grid grid-cols-[96px_1fr] items-center gap-3"}>
           <p className={isSectorMatrix ? "text-[11px] uppercase tracking-[0.22em] text-slate-500" : "text-xs uppercase tracking-[0.18em] text-slate-500"}>{row.label}</p>
-          <div className={isSectorMatrix ? "grid grid-cols-3 gap-3" : "grid grid-cols-3 gap-2"}>
+          <div className={isSectorMatrix ? "grid grid-cols-3 gap-2" : "grid grid-cols-3 gap-2"}>
             {row.cells.map((cell) => (
               <div
                 key={cell.label}
-                className={isSectorMatrix ? "sector-cell relative overflow-hidden border p-3 text-center" : "rounded-2xl border border-white/10 p-3 text-center"}
+                className={isSectorMatrix ? "sector-cell relative overflow-hidden border px-2 py-2.5 text-center" : "rounded-2xl border border-white/10 p-3 text-center"}
                 style={
                   isSectorMatrix
                     ? {
@@ -54,11 +54,11 @@ function HeatmapBlock({ chart }: { chart: ChartSpec }) {
                     : { background: `rgba(255,107,107,${Math.max(0.12, cell.value / 120)})` }
                 }
               >
-                <p className={isSectorMatrix ? "text-[10px] uppercase tracking-[0.18em] text-slate-100" : "text-[10px] uppercase tracking-[0.16em] text-slate-200"}>{cell.label}</p>
-                <p className={isSectorMatrix ? "mt-2 text-lg font-semibold text-white" : "mt-2 text-sm font-semibold text-white"}>{cell.value}</p>
+                <p className={isSectorMatrix ? "text-[9px] uppercase tracking-[0.18em] text-slate-100" : "text-[10px] uppercase tracking-[0.16em] text-slate-200"}>{cell.label}</p>
+                <p className={isSectorMatrix ? "mt-1.5 text-base font-semibold text-white" : "mt-2 text-sm font-semibold text-white"}>{cell.value}</p>
                 {isSectorMatrix ? (
-                  <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-slate-200/80">
-                    <span className={`h-2 w-2 rounded-full ${cell.value >= 80 ? "bg-red-300" : cell.value >= 50 ? "bg-amber-300" : "bg-sky-300"}`} />
+                  <div className="mt-1.5 flex items-center justify-center gap-1 text-[9px] uppercase tracking-[0.15em] text-slate-200/80">
+                    <span className={`h-1.5 w-1.5 rounded-full ${cell.value >= 80 ? "bg-red-300" : cell.value >= 50 ? "bg-amber-300" : "bg-sky-300"}`} />
                     <span>{cell.value >= 80 ? "Alert" : cell.value >= 50 ? "Watch" : "Stable"}</span>
                   </div>
                 ) : null}
@@ -97,6 +97,7 @@ function sharedChartProps() {
 export function ChartRenderer({ chart }: { chart: ChartSpec }) {
   const primarySeries = chart.series?.[0];
   const secondarySeries = chart.series?.[1];
+  const isSectorMatrix = chart.type === "heatmap" && chart.title === "System comparison matrix";
 
   return (
     <div className="aurora-card rounded-[26px] p-5">
@@ -105,7 +106,7 @@ export function ChartRenderer({ chart }: { chart: ChartSpec }) {
         <h3 className="mt-2 text-lg text-white">{chart.title}</h3>
       </div>
 
-      <div className="h-[260px]">
+      <div className={isSectorMatrix ? "relative z-10 min-h-[360px]" : chart.type === "heatmap" ? "min-h-[260px]" : "h-[260px]"}>
         {chart.type === "line" ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chart.data} {...sharedChartProps()}>

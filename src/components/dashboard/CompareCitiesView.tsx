@@ -23,7 +23,7 @@ import {
   YAxis,
 } from "recharts";
 
-const systemOrder: Array<SystemLayer["key"]> = [
+const systemOrder = [
   "temperature",
   "water",
   "air",
@@ -34,12 +34,53 @@ const systemOrder: Array<SystemLayer["key"]> = [
   "housing",
   "transportation",
   "biodiversity",
-];
+] as const satisfies ReadonlyArray<Exclude<SystemLayer["key"], "compare-cities">>;
+
+type CompareSystemKey = (typeof systemOrder)[number];
 
 const statusScore: Record<SystemStatus, number> = {
   critical: 92,
   attention: 61,
   nominal: 28,
+};
+
+const matrixScores: Record<CityData["slug"], Record<CompareSystemKey, number>> = {
+  solara: {
+    temperature: 94,
+    water: 96,
+    air: 84,
+    sun: 68,
+    wind: 57,
+    energy: 91,
+    waste: 58,
+    housing: 88,
+    transportation: 63,
+    biodiversity: 86,
+  },
+  frostara: {
+    temperature: 95,
+    water: 89,
+    air: 62,
+    sun: 93,
+    wind: 91,
+    energy: 96,
+    waste: 84,
+    housing: 64,
+    transportation: 87,
+    biodiversity: 81,
+  },
+  verdantia: {
+    temperature: 66,
+    water: 91,
+    air: 87,
+    sun: 56,
+    wind: 83,
+    energy: 89,
+    waste: 61,
+    housing: 86,
+    transportation: 68,
+    biodiversity: 59,
+  },
 };
 
 function getLayer(city: CityData, key: SystemLayer["key"]) {
@@ -108,7 +149,7 @@ function makeCompareCharts(): ChartSpec[] {
           label: getLayer(cityCollection[0], key)?.label ?? key,
           cells: cityCollection.map((city: CityData) => ({
             label: city.name,
-            value: statusScore[getLayer(city, key)?.status ?? "attention"],
+            value: matrixScores[city.slug][key],
           })),
       })),
     },
