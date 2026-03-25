@@ -200,6 +200,21 @@ body {
   animation: scanLine 2.8s linear infinite;
 }
 
+.sector-cell {
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  border-radius: 10px;
+}
+
+.sector-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 30%),
+    radial-gradient(circle at 50% 0, rgba(255, 255, 255, 0.16), transparent 48%);
+  pointer-events: none;
+}
+
 @keyframes sheen {
   from {
     transform: translateX(-65%) rotate(12deg);

@@ -24,16 +24,44 @@ import { getStatusColor } from "../../features/city-dashboard/utils/status";
 const donutColors = ["#ff6b6b", "#f7b84b", "#53d48a", "#69bff3", "#a78bfa"];
 
 function HeatmapBlock({ chart }: { chart: ChartSpec }) {
+  const isSectorMatrix = chart.title === "System comparison matrix";
+
   return (
-    <div className="grid gap-3">
+    <div className={isSectorMatrix ? "grid gap-4" : "grid gap-3"}>
       {chart.rows?.map((row) => (
-        <div key={row.label} className="grid grid-cols-[96px_1fr] items-center gap-3">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{row.label}</p>
-          <div className="grid grid-cols-3 gap-2">
+        <div key={row.label} className={isSectorMatrix ? "grid grid-cols-[120px_1fr] items-center gap-4" : "grid grid-cols-[96px_1fr] items-center gap-3"}>
+          <p className={isSectorMatrix ? "text-[11px] uppercase tracking-[0.22em] text-slate-500" : "text-xs uppercase tracking-[0.18em] text-slate-500"}>{row.label}</p>
+          <div className={isSectorMatrix ? "grid grid-cols-3 gap-3" : "grid grid-cols-3 gap-2"}>
             {row.cells.map((cell) => (
-              <div key={cell.label} className="rounded-2xl border border-white/10 p-3 text-center" style={{ background: `rgba(255,107,107,${Math.max(0.12, cell.value / 120)})` }}>
-                <p className="text-[10px] uppercase tracking-[0.16em] text-slate-200">{cell.label}</p>
-                <p className="mt-2 text-sm font-semibold text-white">{cell.value}</p>
+              <div
+                key={cell.label}
+                className={isSectorMatrix ? "sector-cell relative overflow-hidden border p-3 text-center" : "rounded-2xl border border-white/10 p-3 text-center"}
+                style={
+                  isSectorMatrix
+                    ? {
+                        borderColor: "rgba(255,255,255,0.08)",
+                        background:
+                          cell.value >= 80
+                            ? "linear-gradient(180deg, rgba(255,82,82,0.34), rgba(120,22,22,0.68))"
+                            : cell.value >= 50
+                              ? "linear-gradient(180deg, rgba(247,184,75,0.24), rgba(97,61,14,0.58))"
+                              : "linear-gradient(180deg, rgba(89,117,148,0.18), rgba(12,24,38,0.82))",
+                        boxShadow:
+                          cell.value >= 80
+                            ? "inset 0 0 0 1px rgba(255,107,107,0.22), 0 12px 24px rgba(80,10,10,0.28)"
+                            : "inset 0 0 0 1px rgba(255,255,255,0.04)",
+                      }
+                    : { background: `rgba(255,107,107,${Math.max(0.12, cell.value / 120)})` }
+                }
+              >
+                <p className={isSectorMatrix ? "text-[10px] uppercase tracking-[0.18em] text-slate-100" : "text-[10px] uppercase tracking-[0.16em] text-slate-200"}>{cell.label}</p>
+                <p className={isSectorMatrix ? "mt-2 text-lg font-semibold text-white" : "mt-2 text-sm font-semibold text-white"}>{cell.value}</p>
+                {isSectorMatrix ? (
+                  <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.16em] text-slate-200/80">
+                    <span className={`h-2 w-2 rounded-full ${cell.value >= 80 ? "bg-red-300" : cell.value >= 50 ? "bg-amber-300" : "bg-sky-300"}`} />
+                    <span>{cell.value >= 80 ? "Alert" : cell.value >= 50 ? "Watch" : "Stable"}</span>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
