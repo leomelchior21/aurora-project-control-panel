@@ -277,6 +277,7 @@ export const solara: CityData = {
     "Solara depends on sunlight for survival, but its systems are under pressure. Extreme heat, intense UV exposure, steep terrain, and water loss make everyday life unstable. Even with strong solar potential, the city still runs on dirty fossil power and suffers constant failures. The city must learn how to protect people while using its natural advantages.",
   heroImage: cityAssets.solara.heroImage,
   secondaryImage: cityAssets.solara.secondaryImage,
+  mapImage: cityAssets.solara.mapImage,
   macroStats: [
     { label: "Population", value: "2.4M" },
     { label: "Area", value: "1,120 km2" },

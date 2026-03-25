@@ -131,6 +131,7 @@ export const frostara: CityData = {
     "Frostara lives under constant thermal pressure. Extreme cold, long dark periods, frozen water access, and wind exposure make infrastructure difficult to maintain. Energy is essential, but costly and unstable. The city is forced to spend much of its strength just to remain functional.",
   heroImage: cityAssets.frostara.heroImage,
   secondaryImage: cityAssets.frostara.secondaryImage,
+  mapImage: cityAssets.frostara.mapImage,
   macroStats: [
     { label: "Population", value: "1.3M" },
     { label: "Area", value: "890 km2" },

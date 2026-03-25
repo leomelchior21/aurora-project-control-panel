@@ -96,6 +96,7 @@ export interface CityData {
   missionBrief: string;
   heroImage: string;
   secondaryImage: string;
+  mapImage: string;
   macroStats: MacroStat[];
   breadcrumbLabel: string;
   systemsOverview: CityOverviewItem[];

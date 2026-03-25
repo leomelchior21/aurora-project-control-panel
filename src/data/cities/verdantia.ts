@@ -128,6 +128,7 @@ export const verdantia: CityData = {
     "Verdantia is surrounded by natural abundance, but that abundance is unstable. High humidity, flooding risk, uneven air flow, and pressure on ecosystems make the city difficult to manage. Nature is present everywhere, yet the urban system fails to protect it properly and still relies on a fragile fossil grid.",
   heroImage: cityAssets.verdantia.heroImage,
   secondaryImage: cityAssets.verdantia.secondaryImage,
+  mapImage: cityAssets.verdantia.mapImage,
   macroStats: [
     { label: "Population", value: "3.1M" },
     { label: "Area", value: "1,540 km2" },

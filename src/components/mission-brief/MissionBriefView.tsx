@@ -57,6 +57,25 @@ export function MissionBriefView({ city }: { city: CityData }) {
             </div>
           </div>
         </section>
+
+        <section className="grid gap-4">
+          <button
+            type="button"
+            onClick={() => setExpandedImage(city.mapImage)}
+            className="aurora-panel group relative overflow-hidden rounded-[30px] border border-white/10 p-4 text-left"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">City Map</p>
+                <p className="mt-2 text-sm text-slate-300">Territory and urban layout reference</p>
+              </div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-slate-950/50 text-white">
+                <Expand className="h-4 w-4" />
+              </span>
+            </div>
+            <img src={city.mapImage} alt={`${city.name} map`} className="h-[320px] w-full rounded-[22px] object-cover transition duration-500 group-hover:scale-[1.01]" />
+          </button>
+        </section>
       </div>
 
       <AnimatePresence>
