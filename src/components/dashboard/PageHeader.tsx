@@ -10,8 +10,13 @@ export function PageHeader({
   layerKey: LayerKey;
   layer?: SystemLayer;
 }) {
-  const title = layerKey === "mission-brief" ? "Mission Brief" : layer?.label ?? "";
-  const state = layerKey === "mission-brief" ? city.oneLineDescription : layer?.state ?? "";
+  const title = layerKey === "mission-brief" ? "Mission Brief" : layerKey === "compare-cities" ? "Compare Cities" : layer?.label ?? "";
+  const state =
+    layerKey === "mission-brief"
+      ? city.oneLineDescription
+      : layerKey === "compare-cities"
+        ? "Read Solara, Frostara, and Verdantia side by side across every system."
+        : layer?.state ?? "";
 
   return (
     <div className="aurora-panel rounded-[28px] border border-white/10 p-6">

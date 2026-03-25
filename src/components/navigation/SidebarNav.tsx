@@ -24,6 +24,7 @@ export function SidebarNav({
       <div className="scrollbar-thin flex-1 overflow-auto pr-1">
         <div className="grid gap-1.5">
           <LayerNavItem layerKey="mission-brief" label="Mission Brief" active={activeLayer === "mission-brief"} onClick={() => onSelectLayer("mission-brief")} />
+          <LayerNavItem layerKey="compare-cities" label="Compare Cities" active={activeLayer === "compare-cities"} onClick={() => onSelectLayer("compare-cities")} />
           {city.layers.map((layer) => (
             <LayerNavItem
               key={layer.key}

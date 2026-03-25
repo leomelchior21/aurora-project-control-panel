@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Home, Thermometer, Droplets, Wind, Sun, Zap, Trash2, Building2, TramFront, Trees } from "lucide-react";
+import { Home, Thermometer, Droplets, Wind, Sun, Zap, Trash2, Building2, TramFront, Trees, PanelsTopLeft } from "lucide-react";
 import type { LayerKey, SystemStatus } from "../../types/city";
 import { cn } from "../../lib/utils";
 import { PulseIndicator } from "../ui/PulseIndicator";
 
 const iconMap = {
   "mission-brief": Home,
+  "compare-cities": PanelsTopLeft,
   temperature: Thermometer,
   water: Droplets,
   air: Wind,

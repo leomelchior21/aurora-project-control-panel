@@ -4,6 +4,7 @@ export type SystemStatus = "critical" | "attention" | "nominal";
 
 export type LayerKey =
   | "mission-brief"
+  | "compare-cities"
   | "temperature"
   | "water"
   | "air"

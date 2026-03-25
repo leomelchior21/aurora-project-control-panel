@@ -8,6 +8,7 @@ import { SidebarNav } from "../components/navigation/SidebarNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
 import { MissionBriefView } from "../components/mission-brief/MissionBriefView";
 import { SystemLayerView } from "../components/dashboard/SystemLayerView";
+import { CompareCitiesView } from "../components/dashboard/CompareCitiesView";
 import { cn } from "../lib/utils";
 import { useState } from "react";
 
@@ -76,7 +77,13 @@ export function CityPage() {
             <PageHeader city={city} layerKey={activeLayer} layer={layer} />
             <AnimatePresence mode="wait">
               <motion.div key={activeLayer} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.28 }}>
-                {activeLayer === "mission-brief" ? <MissionBriefView city={city} /> : layer ? <SystemLayerView layer={layer} /> : null}
+                {activeLayer === "mission-brief" ? (
+                  <MissionBriefView city={city} />
+                ) : activeLayer === "compare-cities" ? (
+                  <CompareCitiesView />
+                ) : layer ? (
+                  <SystemLayerView layer={layer} />
+                ) : null}
               </motion.div>
             </AnimatePresence>
           </main>

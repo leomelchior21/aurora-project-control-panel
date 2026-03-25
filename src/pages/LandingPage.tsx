@@ -7,7 +7,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen px-4 py-6 md:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1440px] flex-col justify-center gap-8">
-        <img src={auroraLogo} alt="Aurora Project" className="mx-auto h-20 w-20 object-contain" />
+        <img src={auroraLogo} alt="Aurora Project" className="mx-auto h-40 w-40 object-contain" />
 
         <div className="grid gap-4 lg:grid-cols-3">
           {cityCollection.map((city, index) => (
