@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { cityCollection } from "../../data/cities/index";
 import { ChartRenderer } from "../charts/ChartRenderer";
 import { StatusBadge } from "../ui/StatusBadge";
 import { getStatusColor } from "../../features/city-dashboard/utils/status";
 import type { ChartSpec, CityData, SystemLayer, SystemStatus } from "../../types/city";
 import { chartTooltipStyle } from "../../lib/chartTheme";
+import { cn } from "../../lib/utils";
 import {
   Area,
   AreaChart,
@@ -141,19 +143,99 @@ function makeCompareCharts(): ChartSpec[] {
       data: stressAverageData,
       series: [{ key: "value", label: "Stress", color: "#69bff3" }],
     },
-    {
-      type: "heatmap",
-      title: "System comparison matrix",
-        subtitle: "Where each city struggles most",
-        rows: systemOrder.map((key) => ({
-          label: getLayer(cityCollection[0], key)?.label ?? key,
-          cells: cityCollection.map((city: CityData) => ({
-            label: city.name,
-            value: matrixScores[city.slug][key],
-          })),
-      })),
-    },
   ];
+}
+
+function getMatrixTone(value: number) {
+  if (value >= 80) return { label: "Alert", color: getStatusColor("critical") };
+  if (value >= 50) return { label: "Watch", color: getStatusColor("attention") };
+  return { label: "Stable", color: "#69bff3" };
+}
+
+function CompactMatrixPanel() {
+  const [mode, setMode] = useState<"grid" | "strips">("grid");
+
+  return (
+    <section className="aurora-panel rounded-[28px] border border-white/10 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Where each city struggles most</p>
+          <h3 className="mt-2 text-2xl text-white">System comparison matrix</h3>
+        </div>
+        <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
+          {[
+            { key: "grid", label: "Compact grid" },
+            { key: "strips", label: "Signal strips" },
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setMode(item.key as "grid" | "strips")}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] transition",
+                mode === item.key ? "bg-white/10 text-white" : "text-slate-400 hover:text-slate-200",
+              )}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-2.5">
+        {systemOrder.map((key) => {
+          const label = getLayer(cityCollection[0], key)?.label ?? key;
+          const entries = cityCollection.map((city: CityData) => {
+            const value = matrixScores[city.slug][key];
+            return { city, value, tone: getMatrixTone(value) };
+          });
+
+          return (
+            <div key={key} className="grid grid-cols-[88px_1fr] items-center gap-3">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
+              {mode === "grid" ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {entries.map(({ city, value, tone }) => (
+                    <div
+                      key={city.slug}
+                      className="rounded-[14px] border px-2 py-2"
+                      style={{
+                        borderColor: `${tone.color}33`,
+                        background: `linear-gradient(180deg, ${tone.color}1f, rgba(255,255,255,0.02))`,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[9px] uppercase tracking-[0.18em] text-slate-200">{city.name}</span>
+                        <span className="text-sm font-semibold text-white">{value}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: tone.color }} />
+                        <span className="text-[9px] uppercase tracking-[0.16em] text-slate-400">{tone.label}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-1.5">
+                  {entries.map(({ city, value, tone }) => (
+                    <div key={city.slug} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-[62px] text-[9px] uppercase tracking-[0.18em] text-slate-300">{city.name}</div>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+                          <div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${tone.color}, ${tone.color}aa)` }} />
+                        </div>
+                        <div className="w-8 text-right text-xs font-semibold text-white">{value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function SystemCompareGraphic({ layers }: { layers: Array<{ city: CityData; layer: SystemLayer }> }) {
@@ -389,9 +471,7 @@ export function CompareCitiesView() {
         <ChartRenderer chart={charts[1]} />
       </section>
 
-      <section>
-        <ChartRenderer chart={charts[2]} />
-      </section>
+      <CompactMatrixPanel />
 
       <section className="grid gap-4 xl:grid-cols-2">
         {systemOrder.map((key) => {
