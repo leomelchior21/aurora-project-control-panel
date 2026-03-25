@@ -64,10 +64,10 @@ const layers = [
   },
   {
     key: "energy", label: "Energy", icon: "zap", status: "critical", state: "Energy system is expensive, fossil-heavy, and unstable",
-    summaryStrip: [{ label: "Fossil", value: "64%" }, { label: "Renewable", value: "18%" }, { label: "Cost", value: "+45%" }, { label: "Shortages", value: "Frequent" }],
-    stats: [{ label: "Fossil power", value: "64%" }, { label: "Clean power", value: "18%" }, { label: "Energy cost", value: "+45%" }, { label: "Shortages", value: "Frequent" }],
+    summaryStrip: [{ label: "Fossil", value: "96%" }, { label: "Renewable", value: "0%" }, { label: "Cost", value: "+45%" }, { label: "Shortages", value: "Frequent" }],
+    stats: [{ label: "Fossil power", value: "96%" }, { label: "Renewables", value: "0%" }, { label: "Energy cost", value: "+45%" }, { label: "Shortages", value: "Frequent" }],
     charts: [
-      donutChart("Energy mix", "Supply mix", [{ label: "Fossil", value: "64" }, { label: "Renewable", value: "18" }, { label: "Other", value: "18" }], "64%", "Fossil"),
+      donutChart("Energy mix", "Supply mix", [{ label: "Fossil", value: "96" }, { label: "Renewable", value: "0" }, { label: "Other", value: "4" }], "96%", "Fossil"),
       { type: "bar", title: "Energy cost", subtitle: "Then and now", data: series([["Before", 100], ["Now", 145]]), series: [{ key: "value", label: "Level" }] },
       { type: "line", title: "Winter demand", subtitle: "Peak demand curve", data: series([["06", 44], ["10", 67], ["14", 78], ["18", 91], ["22", 73]]), series: [{ key: "value", label: "Demand" }] },
       { type: "progress", title: "Shortage frequency", subtitle: "Grid alert", value: 82, max: 100, centerValue: "Frequent", centerLabel: "Shortage" },

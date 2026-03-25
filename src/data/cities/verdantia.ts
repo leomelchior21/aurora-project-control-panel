@@ -60,15 +60,16 @@ const layers = [
     ],
   },
   {
-    key: "energy", label: "Energy", icon: "zap", status: "attention", state: "Grid is partly renewable but operationally unstable",
-    summaryStrip: [{ label: "Renewable", value: "51%" }, { label: "Grid", value: "Unstable" }, { label: "Blackouts", value: "Occasional" }, { label: "Demand peaks", value: "High" }],
-    stats: [{ label: "Renewable Share", value: "51%" }, { label: "Grid Stability", value: "Unstable" }, { label: "Blackouts", value: "Occasional" }, { label: "Demand Peaks", value: "High" }],
+    key: "energy", label: "Energy", icon: "zap", status: "critical", state: "Fossil grid is unstable and fails under heavy demand",
+    summaryStrip: [{ label: "Fossil", value: "89%" }, { label: "Renewable", value: "0%" }, { label: "Blackouts", value: "Frequent" }, { label: "Demand peaks", value: "High" }],
+    stats: [{ label: "Fossil power", value: "89%" }, { label: "Renewables", value: "0%" }, { label: "Blackouts", value: "Frequent" }, { label: "Demand peaks", value: "High" }],
     charts: [
-      donutChart("Energy mix", "Renewable vs non-renewable", [{ label: "Renewable", value: "51" }, { label: "Non-renewable", value: "49" }], "51%", "Renewable"),
-      { type: "line", title: "Demand peaks", subtitle: "Blackout and demand trend", data: [{ label: "W1", demand: 61, blackouts: 1 }, { label: "W2", demand: 74, blackouts: 2 }, { label: "W3", demand: 69, blackouts: 1 }, { label: "W4", demand: 82, blackouts: 2 }], series: [{ key: "demand", label: "Demand" }, { key: "blackouts", label: "Blackouts" }] },
-      { type: "radial", title: "Power stability", subtitle: "Today", value: 46, max: 100, centerValue: "46", centerLabel: "Stable" },
-      { type: "bar", title: "Stable vs unstable hours", subtitle: "Daily operations", data: series([["Stable", 17], ["Unstable", 7]]), series: [{ key: "value", label: "Hours" }] },
+      donutChart("Energy mix", "Supply mix", [{ label: "Fossil", value: "89" }, { label: "Renewable", value: "0" }, { label: "Other", value: "11" }], "89%", "Fossil"),
+      { type: "line", title: "Demand peaks", subtitle: "Blackout and demand trend", data: [{ label: "W1", demand: 61, blackouts: 2 }, { label: "W2", demand: 74, blackouts: 3 }, { label: "W3", demand: 69, blackouts: 2 }, { label: "W4", demand: 82, blackouts: 4 }], series: [{ key: "demand", label: "Demand" }, { key: "blackouts", label: "Blackouts" }] },
+      { type: "radial", title: "Power stability", subtitle: "Today", value: 28, max: 100, centerValue: "28", centerLabel: "Stable" },
+      { type: "bar", title: "Stable vs unstable hours", subtitle: "Daily operations", data: series([["Stable", 11], ["Unstable", 13]]), series: [{ key: "value", label: "Hours" }] },
     ],
+    alerts: [makeAlert("Grid strain", "Flooded infrastructure and fossil dependence make outages frequent across the wettest zones.")],
   },
   {
     key: "waste", label: "Waste", icon: "trash-2", status: "attention", state: "Organic waste is high and disposal pressure persists",
@@ -124,7 +125,7 @@ export const verdantia: CityData = {
   accentSoft: cityAssets.verdantia.accentSoft,
   oneLineDescription: "A humid rainforest metropolis overwhelmed by water, density, and ecological pressure.",
   missionBrief:
-    "Verdantia is surrounded by natural abundance, but that abundance is unstable. High humidity, flooding risk, uneven air flow, and pressure on ecosystems make the city difficult to manage. Nature is present everywhere, yet the urban system fails to protect it properly.",
+    "Verdantia is surrounded by natural abundance, but that abundance is unstable. High humidity, flooding risk, uneven air flow, and pressure on ecosystems make the city difficult to manage. Nature is present everywhere, yet the urban system fails to protect it properly and still relies on a fragile fossil grid.",
   heroImage: cityAssets.verdantia.heroImage,
   secondaryImage: cityAssets.verdantia.secondaryImage,
   macroStats: [

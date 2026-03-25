@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { cityCollection, cityMap } from "../data/cities/index";
+import { cityMap } from "../data/cities/index";
 import type { CitySlug, LayerKey } from "../types/city";
 import { SidebarNav } from "../components/navigation/SidebarNav";
 import { PageHeader } from "../components/dashboard/PageHeader";
@@ -29,10 +29,8 @@ export function CityPage() {
   }
 
   const layer = city.layers.find((item) => item.key === activeLayer);
-  const handleSwitchCity = () => {
-    const currentIndex = cityCollection.findIndex((entry) => entry.slug === city.slug);
-    const nextCity = cityCollection[(currentIndex + 1) % cityCollection.length];
-    navigate(`/city/${nextCity.slug}${activeLayer === "mission-brief" ? "" : `#${activeLayer}`}`);
+  const handleSelectCity = (nextSlug: CitySlug) => {
+    navigate(`/city/${nextSlug}${activeLayer === "mission-brief" ? "" : `#${activeLayer}`}`);
     setNavOpen(false);
   };
 
@@ -56,7 +54,7 @@ export function CityPage() {
 
         <div className="grid gap-4 lg:grid-cols-[270px_minmax(0,1fr)]">
           <div className="hidden lg:block">
-            <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSwitchCity={handleSwitchCity} />
+            <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSelectCity={handleSelectCity} />
           </div>
 
           <AnimatePresence>
@@ -68,7 +66,7 @@ export function CityPage() {
                       <X className="h-5 w-5" />
                     </button>
                   </div>
-                  <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSwitchCity={handleSwitchCity} />
+                  <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSelectCity={handleSelectCity} />
                 </motion.div>
               </motion.div>
             ) : null}
