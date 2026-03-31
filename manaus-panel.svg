@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Painel visual de Manaus">
+  <rect width="1600" height="900" fill="#0C0D10"/>
+  <rect y="520" width="1600" height="380" fill="#141519"/>
+  <path d="M0 610 C240 660 420 640 640 620 S1040 580 1600 700 V900 H0 Z" fill="#111D24"/>
+  <rect x="300" y="250" width="110" height="330" fill="#24262B"/>
+  <rect x="450" y="180" width="130" height="400" fill="#2C2F35"/>
+  <rect x="620" y="220" width="118" height="360" fill="#26282E"/>
+  <rect x="780" y="160" width="120" height="420" fill="#30333A"/>
+  <rect x="930" y="210" width="140" height="370" fill="#292B31"/>
+  <circle cx="1260" cy="190" r="110" fill="#FF3131" opacity="0.78"/>
+  <path d="M90 690 C250 650 330 740 470 700 S720 640 910 720 S1280 670 1540 760" fill="none" stroke="#39464D" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="460" cy="702" r="22" fill="#3A4045"/>
+  <circle cx="770" cy="688" r="16" fill="#3A4045"/>
+  <circle cx="1220" cy="724" r="24" fill="#3A4045"/>
+  <text x="94" y="122" fill="#F3E7D3" font-family="Arial, sans-serif" font-size="64" font-weight="700">MANAUS</text>
+  <text x="96" y="172" fill="#FFBF00" font-family="Arial, sans-serif" font-size="28" letter-spacing="5">IGARAPES COBERTOS POR LIXO E CALOR</text>
+  <text x="96" y="784" fill="#D7C7AE" font-family="Arial, sans-serif" font-size="30">A floresta existe ao redor, mas o centro sufoca em asfalto e esgoto.</text>
+</svg>

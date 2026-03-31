@@ -1,4 +1,4 @@
-export type CitySlug = "solara" | "frostara" | "verdantia";
+export type CitySlug = "petrolina" | "manaus" | "pelotas";
 
 export type SystemStatus = "critical" | "attention" | "nominal";
 

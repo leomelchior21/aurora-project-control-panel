@@ -1,29 +1,25 @@
-import { useState } from "react";
-import { cityCollection } from "../../data/cities/index";
-import { ChartRenderer } from "../charts/ChartRenderer";
-import { StatusBadge } from "../ui/StatusBadge";
-import { getStatusColor } from "../../features/city-dashboard/utils/status";
-import type { ChartSpec, CityData, SystemLayer, SystemStatus } from "../../types/city";
-import { chartTooltipStyle } from "../../lib/chartTheme";
-import { cn } from "../../lib/utils";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   Line,
   LineChart,
-  Pie,
-  PieChart,
-  PolarAngleAxis,
-  RadialBar,
-  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { cityCollection } from "../../data/cities/index";
+import { ChartRenderer } from "../charts/ChartRenderer";
+import { StatusBadge } from "../ui/StatusBadge";
+import { getStatusColor } from "../../features/city-dashboard/utils/status";
+import type { ChartSpec, CityData, LayerKey, SystemLayer, SystemStatus } from "../../types/city";
+import { chartGridColor, chartTextColor, chartTooltipStyle } from "../../lib/chartTheme";
+import { cn } from "../../lib/utils";
 
 const systemOrder = [
   "temperature",
@@ -38,71 +34,18 @@ const systemOrder = [
   "biodiversity",
 ] as const satisfies ReadonlyArray<Exclude<SystemLayer["key"], "compare-cities">>;
 
-type CompareSystemKey = (typeof systemOrder)[number];
-
 const statusScore: Record<SystemStatus, number> = {
   critical: 92,
-  attention: 61,
-  nominal: 28,
-};
-
-const matrixScores: Record<CityData["slug"], Record<CompareSystemKey, number>> = {
-  solara: {
-    temperature: 94,
-    water: 96,
-    air: 84,
-    sun: 68,
-    wind: 57,
-    energy: 91,
-    waste: 58,
-    housing: 88,
-    transportation: 63,
-    biodiversity: 86,
-  },
-  frostara: {
-    temperature: 95,
-    water: 89,
-    air: 62,
-    sun: 93,
-    wind: 91,
-    energy: 96,
-    waste: 84,
-    housing: 64,
-    transportation: 87,
-    biodiversity: 81,
-  },
-  verdantia: {
-    temperature: 66,
-    water: 91,
-    air: 87,
-    sun: 56,
-    wind: 83,
-    energy: 89,
-    waste: 61,
-    housing: 86,
-    transportation: 68,
-    biodiversity: 59,
-  },
+  attention: 64,
+  nominal: 32,
 };
 
 function getLayer(city: CityData, key: SystemLayer["key"]) {
   return city.layers.find((layer) => layer.key === key);
 }
 
-function extractNumeric(value: string) {
-  const match = value.replace(",", ".").match(/-?\d+(\.\d+)?/);
-  return match ? Number(match[0]) : 0;
-}
-
-function compareMetricValue(layer: SystemLayer) {
-  if (layer.key === "waste") return extractNumeric(layer.stats[1]?.value ?? `${statusScore[layer.status]}`);
-
-  const source = layer.stats[0]?.value ?? "";
-  const numeric = extractNumeric(source);
-
-  if (numeric !== 0 || /0/.test(source)) return numeric;
-
-  return statusScore[layer.status];
+function getCompareKeys() {
+  return systemOrder.filter((key) => cityCollection.some((city) => getLayer(city, key)));
 }
 
 function citySummary(city: CityData) {
@@ -111,6 +54,18 @@ function citySummary(city: CityData) {
   const topLayer = city.layers.find((layer) => layer.status === "critical") ?? city.layers[0];
 
   return { critical, attention, topLayer };
+}
+
+function layerPressureScore(layer?: SystemLayer) {
+  if (!layer) return null;
+  return statusScore[layer.status];
+}
+
+function getMatrixTone(value: number | null) {
+  if (value === null) return { label: "Sem dado", color: "rgba(141,152,168,0.9)" };
+  if (value >= 80) return { label: "Crítico", color: getStatusColor("critical") };
+  if (value >= 50) return { label: "Atenção", color: getStatusColor("attention") };
+  return { label: "Estável", color: getStatusColor("nominal") };
 }
 
 function makeCompareCharts(): ChartSpec[] {
@@ -128,44 +83,38 @@ function makeCompareCharts(): ChartSpec[] {
   return [
     {
       type: "stacked-bar",
-      title: "System stress mix",
-      subtitle: "Critical and attention systems by city",
+      title: "Mistura de pressão",
+      subtitle: "Camadas críticas e em atenção por cidade",
       data: pressureBarData,
       series: [
-        { key: "critical", label: "Critical", color: getStatusColor("critical") },
-        { key: "attention", label: "Attention", color: getStatusColor("attention") },
+        { key: "critical", label: "Crítico", color: getStatusColor("critical") },
+        { key: "attention", label: "Atenção", color: getStatusColor("attention") },
       ],
     },
     {
       type: "bar",
-      title: "Average city stress",
-      subtitle: "Cross-city pressure score",
+      title: "Pressão média publicada",
+      subtitle: "Severidade média deste recorte",
       data: stressAverageData,
-      series: [{ key: "value", label: "Stress", color: "#69bff3" }],
+      series: [{ key: "value", label: "Pressão", color: "#FFBF00" }],
     },
   ];
 }
 
-function getMatrixTone(value: number) {
-  if (value >= 80) return { label: "Alert", color: getStatusColor("critical") };
-  if (value >= 50) return { label: "Watch", color: getStatusColor("attention") };
-  return { label: "Stable", color: "#69bff3" };
-}
-
-function CompactMatrixPanel() {
+function CompactMatrixPanel({ compareKeys }: { compareKeys: Array<Exclude<LayerKey, "mission-brief" | "compare-cities">> }) {
   const [mode, setMode] = useState<"grid" | "strips">("grid");
 
   return (
     <section className="aurora-panel rounded-[28px] border border-white/10 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Where each city struggles most</p>
-          <h3 className="mt-2 text-2xl text-white">System comparison matrix</h3>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Leitura cruzada</p>
+          <h3 className="mt-2 text-2xl text-white">Matriz de pressão</h3>
         </div>
         <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
           {[
-            { key: "grid", label: "Compact grid" },
-            { key: "strips", label: "Signal strips" },
+            { key: "grid", label: "Grade" },
+            { key: "strips", label: "Faixas" },
           ].map((item) => (
             <button
               key={item.key}
@@ -183,30 +132,32 @@ function CompactMatrixPanel() {
       </div>
 
       <div className="mt-5 grid gap-2.5">
-        {systemOrder.map((key) => {
-          const label = getLayer(cityCollection[0], key)?.label ?? key;
+        {compareKeys.map((key) => {
+          const referenceLayer = cityCollection.find((city) => getLayer(city, key))?.layers.find((layer) => layer.key === key);
+          const label = referenceLayer?.label ?? key;
           const entries = cityCollection.map((city: CityData) => {
-            const value = matrixScores[city.slug][key];
-            return { city, value, tone: getMatrixTone(value) };
+            const layer = getLayer(city, key);
+            const value = layerPressureScore(layer);
+            return { city, layer, value, tone: getMatrixTone(value) };
           });
 
           return (
-            <div key={key} className="grid grid-cols-[88px_1fr] items-center gap-3">
+            <div key={key} className="grid grid-cols-[110px_1fr] items-center gap-3">
               <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
               {mode === "grid" ? (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid gap-2 md:grid-cols-3">
                   {entries.map(({ city, value, tone }) => (
                     <div
                       key={city.slug}
-                      className="rounded-[14px] border px-2 py-2"
+                      className="rounded-[14px] border px-3 py-3"
                       style={{
                         borderColor: `${tone.color}33`,
-                        background: `linear-gradient(180deg, ${tone.color}1f, rgba(255,255,255,0.02))`,
+                        background: value === null ? "rgba(255,255,255,0.02)" : `linear-gradient(180deg, ${tone.color}1f, rgba(255,255,255,0.02))`,
                       }}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[9px] uppercase tracking-[0.18em] text-slate-200">{city.name}</span>
-                        <span className="text-sm font-semibold text-white">{value}</span>
+                        <span className="text-sm font-semibold text-white">{value ?? "—"}</span>
                       </div>
                       <div className="mt-1.5 flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: tone.color }} />
@@ -220,11 +171,17 @@ function CompactMatrixPanel() {
                   {entries.map(({ city, value, tone }) => (
                     <div key={city.slug} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="min-w-[62px] text-[9px] uppercase tracking-[0.18em] text-slate-300">{city.name}</div>
+                        <div className="min-w-[68px] text-[9px] uppercase tracking-[0.18em] text-slate-300">{city.name}</div>
                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
-                          <div className="h-full rounded-full" style={{ width: `${value}%`, background: `linear-gradient(90deg, ${tone.color}, ${tone.color}aa)` }} />
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: value === null ? "8%" : `${value}%`,
+                              background: value === null ? "rgba(141,152,168,0.35)" : `linear-gradient(90deg, ${tone.color}, ${tone.color}aa)`,
+                            }}
+                          />
                         </div>
-                        <div className="w-8 text-right text-xs font-semibold text-white">{value}</div>
+                        <div className="w-10 text-right text-xs font-semibold text-white">{value ?? "—"}</div>
                       </div>
                     </div>
                   ))}
@@ -238,82 +195,62 @@ function CompactMatrixPanel() {
   );
 }
 
-function SystemCompareGraphic({ layers }: { layers: Array<{ city: CityData; layer: SystemLayer }> }) {
-  const key = layers[0].layer.key;
-  const values = layers.map(({ city, layer }) => ({
+function SystemCompareGraphic({
+  entries,
+  systemKey,
+}: {
+  entries: Array<{ city: CityData; layer?: SystemLayer }>;
+  systemKey: Exclude<LayerKey, "mission-brief" | "compare-cities">;
+}) {
+  const available = entries.filter((entry): entry is { city: CityData; layer: SystemLayer } => Boolean(entry.layer));
+
+  if (!available.length) {
+    return <p className="text-sm text-slate-400">Nenhum dado publicado para este eixo.</p>;
+  }
+
+  const values = available.map(({ city, layer }) => ({
     label: city.name,
-    value: compareMetricValue(layer),
-    status: layer.status,
+    value: layerPressureScore(layer) ?? 0,
     color: city.accent,
   }));
 
-  const sharedAxis = (
-    <>
-      <XAxis dataKey="label" stroke="rgba(170,182,204,0.8)" tickLine={false} axisLine={false} />
-      <YAxis stroke="rgba(170,182,204,0.8)" tickLine={false} axisLine={false} width={28} />
-      <Tooltip contentStyle={chartTooltipStyle} />
-    </>
-  );
-
-  if (key === "temperature") {
+  if (systemKey === "temperature") {
     return (
-      <ResponsiveContainer width="100%" height={170}>
-        <LineChart data={values} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
-          {sharedAxis}
-          <Line type="monotone" dataKey="value" stroke="#ff8b6e" strokeWidth={3} dot={{ r: 5, fill: "#ff8b6e" }} />
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart data={values} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke={chartGridColor} vertical={false} />
+          <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
+          <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={28} />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Line type="monotone" dataKey="value" stroke="#FF3131" strokeWidth={3} dot={{ r: 5, fill: "#FF3131" }} />
         </LineChart>
       </ResponsiveContainer>
     );
   }
 
-  if (key === "water") {
+  if (systemKey === "water") {
     return (
-      <ResponsiveContainer width="100%" height={170}>
-        <AreaChart data={values} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
-          {sharedAxis}
-          <Area type="monotone" dataKey="value" stroke="#69bff3" fill="#69bff3" fillOpacity={0.22} />
+      <ResponsiveContainer width="100%" height={180}>
+        <AreaChart data={values} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke={chartGridColor} vertical={false} />
+          <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
+          <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={28} />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Area type="monotone" dataKey="value" stroke="#FFBF00" fill="#FFBF00" fillOpacity={0.2} />
         </AreaChart>
       </ResponsiveContainer>
     );
   }
 
-  if (key === "air") {
+  if (systemKey === "energy") {
     return (
-      <div className="grid grid-cols-3 gap-3">
-        {values.map((item) => (
-          <div key={item.label} className="rounded-[18px] border border-white/10 p-4 text-center" style={{ background: `linear-gradient(180deg, ${getStatusColor(item.status)}22, rgba(255,255,255,0.02))` }}>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
-            <div className="mt-3 h-16 rounded-2xl" style={{ background: `linear-gradient(180deg, ${getStatusColor(item.status)}${Math.round((Math.min(Math.abs(item.value), 180) / 180) * 99).toString(16).padStart(2, "0")}, rgba(255,255,255,0.04))` }} />
-            <p className="mt-3 text-lg font-semibold text-white">{item.value}</p>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (key === "sun") {
-    return (
-      <ResponsiveContainer width="100%" height={170}>
-        <PieChart>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={values} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke={chartGridColor} vertical={false} />
+          <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
+          <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={28} />
           <Tooltip contentStyle={chartTooltipStyle} />
-          <Pie data={values} dataKey="value" nameKey="label" innerRadius={44} outerRadius={72} paddingAngle={4}>
-            {values.map((item) => (
-              <Cell key={item.label} fill={item.color} />
-            ))}
-          </Pie>
-        </PieChart>
-      </ResponsiveContainer>
-    );
-  }
-
-  if (key === "wind") {
-    return (
-      <ResponsiveContainer width="100%" height={170}>
-        <BarChart data={values} layout="vertical" margin={{ top: 0, right: 8, left: 8, bottom: 0 }}>
-          <XAxis type="number" stroke="rgba(170,182,204,0.8)" tickLine={false} axisLine={false} />
-          <YAxis type="category" dataKey="label" stroke="rgba(170,182,204,0.8)" tickLine={false} axisLine={false} width={70} />
-          <Tooltip contentStyle={chartTooltipStyle} />
-          <Bar dataKey="value" radius={[0, 10, 10, 0]}>
+          <Bar dataKey="value" radius={[8, 8, 0, 0]}>
             {values.map((item) => (
               <Cell key={item.label} fill={item.color} />
             ))}
@@ -323,94 +260,16 @@ function SystemCompareGraphic({ layers }: { layers: Array<{ city: CityData; laye
     );
   }
 
-  if (key === "energy") {
-    const data = layers.map(({ city, layer }) => ({
-      label: city.name,
-      fossil: extractNumeric(layer.stats[0]?.value ?? "0"),
-      outages: Math.max(8, extractNumeric(layer.stats[3]?.value ?? "0") * 12),
-    }));
-
-    return (
-      <ResponsiveContainer width="100%" height={170}>
-        <BarChart data={data} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
-          {sharedAxis}
-          <Bar dataKey="fossil" stackId="energy" fill={getStatusColor("critical")} radius={[8, 8, 0, 0]} />
-          <Bar dataKey="outages" stackId="energy" fill="#f7b84b" radius={[8, 8, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  }
-
-  if (key === "waste") {
-    const average = Math.round(values.reduce((sum, item) => sum + item.value, 0) / values.length);
-
-    return (
-      <ResponsiveContainer width="100%" height={170}>
-        <RadialBarChart innerRadius="64%" outerRadius="100%" data={[{ value: average }]} startAngle={90} endAngle={-270}>
-          <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <RadialBar dataKey="value" cornerRadius={14} fill={getStatusColor(average >= 60 ? "critical" : average >= 35 ? "attention" : "nominal")} />
-          <Tooltip contentStyle={chartTooltipStyle} />
-        </RadialBarChart>
-      </ResponsiveContainer>
-    );
-  }
-
-  if (key === "housing") {
-    return (
-      <div className="grid gap-3">
-        {values.map((item) => (
-          <div key={item.label}>
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm text-white">{item.label}</p>
-              <p className="text-sm text-slate-300">{item.value}%</p>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
-              <div className="h-full rounded-full" style={{ width: `${Math.max(6, Math.min(Math.abs(item.value), 100))}%`, background: `linear-gradient(90deg, ${item.color}, ${item.color}aa)` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (key === "transportation") {
-    return (
-      <div className="grid grid-cols-3 gap-3">
-        {values.map((item) => (
-          <div key={item.label} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
-            <div className="mt-4 flex h-20 items-end gap-1">
-              {[0.45, 0.7, 0.95].map((multiplier, index) => (
-                <div key={index} className="flex-1 rounded-t-full" style={{ height: `${Math.max(16, Math.min(item.value * multiplier, 100))}%`, background: `linear-gradient(180deg, ${item.color}, ${item.color}66)` }} />
-              ))}
-            </div>
-            <p className="mt-3 text-lg font-semibold text-white">{item.value}</p>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="grid gap-3">
       {values.map((item) => (
-        <div key={item.label} className="rounded-[18px] border border-white/10 bg-white/[0.03] p-3">
-          <div className="flex items-center justify-between">
+        <div key={item.label}>
+          <div className="mb-2 flex items-center justify-between">
             <p className="text-sm text-white">{item.label}</p>
             <p className="text-sm text-slate-300">{item.value}</p>
           </div>
-          <div className="mt-3 flex gap-1">
-            {[0, 1, 2, 3, 4, 5].map((segment) => (
-              <div
-                key={segment}
-                className="h-3 flex-1 rounded-full"
-                style={{
-                  background: segment < Math.max(1, Math.round(Math.min(Math.abs(item.value), 100) / 18))
-                    ? `linear-gradient(90deg, ${item.color}, ${item.color}99)`
-                    : "rgba(255,255,255,0.08)",
-                }}
-              />
-            ))}
+          <div className="h-3 overflow-hidden rounded-full bg-white/[0.08]">
+            <div className="h-full rounded-full" style={{ width: `${item.value}%`, background: `linear-gradient(90deg, ${item.color}, ${item.color}aa)` }} />
           </div>
         </div>
       ))}
@@ -420,9 +279,18 @@ function SystemCompareGraphic({ layers }: { layers: Array<{ city: CityData; laye
 
 export function CompareCitiesView() {
   const charts = makeCompareCharts();
+  const compareKeys = useMemo(() => getCompareKeys(), []);
 
   return (
     <div className="grid gap-4">
+      <section className="aurora-panel rounded-[28px] border border-white/10 p-5">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Sem resposta pronta</p>
+        <h3 className="mt-2 font-headline text-[clamp(1.8rem,3vw,2.8rem)] leading-none text-white">Compare as pressões, não procure conforto.</h3>
+        <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
+          Cada cidade publica só os eixos mais expostos deste recorte. Onde houver vazio, leia como ausência de dado publicado e não como ausência de problema.
+        </p>
+      </section>
+
       <section className="grid gap-4 xl:grid-cols-3">
         {cityCollection.map((city) => {
           const summary = citySummary(city);
@@ -433,7 +301,7 @@ export function CompareCitiesView() {
               className="rounded-[28px] border p-5"
               style={{
                 borderColor: `${city.accent}33`,
-                background: `linear-gradient(180deg, rgba(9,16,30,0.9), rgba(5,10,20,0.95)), linear-gradient(140deg, ${city.accent}18, transparent 48%)`,
+                background: `linear-gradient(180deg, rgba(16,16,18,0.94), rgba(9,10,12,0.98)), linear-gradient(140deg, ${city.accent}18, transparent 48%)`,
               }}
             >
               <div className="flex items-start justify-between gap-4">
@@ -444,20 +312,20 @@ export function CompareCitiesView() {
                     <p className="mt-1 text-sm text-slate-300">{city.oneLineDescription}</p>
                   </div>
                 </div>
-                <StatusBadge status={summary.critical >= 6 ? "critical" : "attention"} />
+                <StatusBadge status={summary.critical >= 1 ? "critical" : "attention"} />
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Critical systems</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Camadas críticas</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{summary.critical}</p>
                 </div>
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Attention systems</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Em atenção</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{summary.attention}</p>
                 </div>
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Highest pressure</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Maior pressão</p>
                   <p className="mt-3 text-lg font-semibold text-white">{summary.topLayer.label}</p>
                 </div>
               </div>
@@ -471,43 +339,46 @@ export function CompareCitiesView() {
         <ChartRenderer chart={charts[1]} />
       </section>
 
-      <CompactMatrixPanel />
+      <CompactMatrixPanel compareKeys={compareKeys} />
 
       <section className="grid gap-4 xl:grid-cols-2">
-        {systemOrder.map((key) => {
-          const layers: Array<{ city: CityData; layer: SystemLayer }> = cityCollection.map((city: CityData) => ({ city, layer: getLayer(city, key)! }));
+        {compareKeys.map((key) => {
+          const entries = cityCollection.map((city: CityData) => ({ city, layer: getLayer(city, key) }));
+          const label = entries.find((entry) => entry.layer)?.layer?.label ?? key;
 
           return (
             <div key={key} className="aurora-panel rounded-[28px] border border-white/10 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Cross-city system map</p>
-                  <h3 className="mt-2 text-xl text-white">{layers[0].layer.label}</h3>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Mapa cruzado</p>
+                  <h3 className="mt-2 text-xl text-white">{label}</h3>
                 </div>
               </div>
 
               <div className="mt-5">
-                <SystemCompareGraphic layers={layers} />
+                <SystemCompareGraphic entries={entries} systemKey={key} />
               </div>
 
               <div className="mt-5 grid gap-3">
-                {layers.map(({ city, layer }: { city: CityData; layer: SystemLayer }) => (
+                {entries.map(({ city, layer }) => (
                   <div
-                    key={`${city.slug}-${layer.key}`}
+                    key={`${city.slug}-${key}`}
                     className="flex items-center justify-between rounded-[20px] border px-4 py-4"
                     style={{
-                      borderColor: `${getStatusColor(layer.status)}33`,
-                      background: `linear-gradient(140deg, ${getStatusColor(layer.status)}18, rgba(255,255,255,0.02) 55%)`,
+                      borderColor: `${getStatusColor(layer?.status ?? "nominal")}33`,
+                      background: layer
+                        ? `linear-gradient(140deg, ${getStatusColor(layer.status)}18, rgba(255,255,255,0.02) 55%)`
+                        : "rgba(255,255,255,0.02)",
                     }}
                   >
                     <div className="flex items-center gap-3">
                       <img src={city.logo} alt={`${city.name} logo`} className="h-11 w-11 object-contain" />
                       <div>
                         <p className="text-base text-white">{city.name}</p>
-                        <p className="mt-1 text-sm text-slate-300">{layer.state}</p>
+                        <p className="mt-1 text-sm text-slate-300">{layer ? layer.state : "Eixo não publicado neste recorte."}</p>
                       </div>
                     </div>
-                    <StatusBadge status={layer.status} />
+                    {layer ? <StatusBadge status={layer.status} /> : <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Sem dado</span>}
                   </div>
                 ))}
               </div>

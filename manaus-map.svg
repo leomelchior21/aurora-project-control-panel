@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Mapa esquemático de Manaus">
+  <rect width="1600" height="900" fill="#0F1013"/>
+  <rect x="40" y="40" width="1520" height="820" rx="28" fill="none" stroke="#4A4C52" stroke-width="2"/>
+  <path d="M140 280 C360 220 530 360 770 300 S1180 220 1470 360" fill="none" stroke="#295067" stroke-width="56" stroke-linecap="round"/>
+  <path d="M180 540 C420 470 560 640 810 560 S1210 430 1450 600" fill="none" stroke="#2B2D33" stroke-width="40" stroke-linecap="round" stroke-dasharray="18 16"/>
+  <rect x="560" y="340" width="310" height="190" rx="16" fill="#1B1D22" stroke="#FF3131" stroke-width="3"/>
+  <text x="594" y="402" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="30" font-weight="700">CENTRO QUENTE</text>
+  <text x="594" y="446" fill="#FF3131" font-family="Arial, sans-serif" font-size="22">Sensacao acima de 45 C</text>
+  <rect x="1040" y="540" width="320" height="160" rx="16" fill="#1B1D22" stroke="#FFBF00" stroke-width="3"/>
+  <text x="1070" y="598" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="28" font-weight="700">IGARAPES</text>
+  <text x="1070" y="638" fill="#FFBF00" font-family="Arial, sans-serif" font-size="22">30 ton/dia de lixo</text>
+  <text x="84" y="120" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="54" font-weight="700">MANAUS</text>
+  <text x="84" y="168" fill="#B7A891" font-family="Arial, sans-serif" font-size="24">Mapa esquematico de calor e residuos hidricos</text>
+</svg>

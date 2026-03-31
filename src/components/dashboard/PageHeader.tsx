@@ -10,12 +10,12 @@ export function PageHeader({
   layerKey: LayerKey;
   layer?: SystemLayer;
 }) {
-  const title = layerKey === "mission-brief" ? "Mission Brief" : layerKey === "compare-cities" ? "Compare Cities" : layer?.label ?? "";
+  const title = layerKey === "mission-brief" ? "Dossie da Cidade" : layerKey === "compare-cities" ? "Comparar Pressoes" : layer?.label ?? "";
   const state =
     layerKey === "mission-brief"
       ? city.oneLineDescription
       : layerKey === "compare-cities"
-        ? "Read Solara, Frostara, and Verdantia side by side across every system."
+        ? `Leia ${city.name} ao lado de Petrolina, Manaus e Pelotas para rastrear onde a pressao muda de forma.`
         : layer?.state ?? "";
 
   return (

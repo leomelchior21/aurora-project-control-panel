@@ -9,6 +9,8 @@ declare const _default: {
                 ink: string;
                 mist: string;
                 flare: string;
+                signal: string;
+                anthracite: string;
             };
             fontFamily: {
                 display: [string, string, string];

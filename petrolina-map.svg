@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Mapa esquemático de Petrolina">
+  <rect width="1600" height="900" fill="#101114"/>
+  <rect x="40" y="40" width="1520" height="820" rx="28" fill="none" stroke="#4A4C52" stroke-width="2"/>
+  <path d="M-40 350 C260 300 460 430 760 380 S1250 260 1660 330" fill="none" stroke="#2F89B6" stroke-width="72" stroke-linecap="round"/>
+  <path d="M110 520 L410 420 L540 610 L760 500 L990 660 L1250 520" fill="none" stroke="#6A4825" stroke-width="32" stroke-linecap="round"/>
+  <rect x="560" y="300" width="260" height="180" rx="16" fill="#1B1D22" stroke="#FFBF00" stroke-width="3"/>
+  <text x="590" y="360" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="30" font-weight="700">CENTRO</text>
+  <text x="590" y="404" fill="#FFBF00" font-family="Arial, sans-serif" font-size="22">2% sem agua</text>
+  <rect x="940" y="520" width="360" height="180" rx="16" fill="#1B1D22" stroke="#FF3131" stroke-width="3"/>
+  <text x="970" y="580" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="30" font-weight="700">PERIFERIA</text>
+  <text x="970" y="624" fill="#FF3131" font-family="Arial, sans-serif" font-size="22">32% sem abastecimento</text>
+  <text x="84" y="120" fill="#F4E7D1" font-family="Arial, sans-serif" font-size="54" font-weight="700">PETROLINA</text>
+  <text x="84" y="168" fill="#B7A891" font-family="Arial, sans-serif" font-size="24">Mapa esquematico do nexo agua-energia</text>
+</svg>

@@ -26,7 +26,7 @@ export function CityPage() {
   }, [location.hash]);
 
   if (!city) {
-    return <div className="p-8 text-white">City not found.</div>;
+    return <div className="p-8 text-white">Cidade não encontrada.</div>;
   }
 
   const layer = city.layers.find((item) => item.key === activeLayer);
@@ -82,7 +82,7 @@ export function CityPage() {
                 ) : activeLayer === "compare-cities" ? (
                   <CompareCitiesView />
                 ) : layer ? (
-                  <SystemLayerView layer={layer} />
+                  <SystemLayerView city={city} layer={layer} onSelectLayer={handleSelectLayer} />
                 ) : null}
               </motion.div>
             </AnimatePresence>

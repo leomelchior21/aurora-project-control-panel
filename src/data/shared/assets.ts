@@ -1,16 +1,13 @@
 import projectAuroraLogo from "../../../project-aurora-logo.svg";
-import solaraLogo from "../../../solara-logo.svg";
-import frostaraLogo from "../../../frostara-logo.svg";
-import verdantiaLogo from "../../../verdantia-logo.svg";
-import solaraLandscape from "../../../solara-landscape.png";
-import solaraStreetview from "../../../solara-streetview.png";
-import frostaraLandscape from "../../../frostara-landscape.png";
-import frostaraStreetview from "../../../frostara-streetview.png";
-import verdantiaLandscape from "../../../verdantia-landscape.png";
-import verdantiaStreetview from "../../../verdantia-streetview.png";
-import solaraMap from "../../../mapa-solara.png";
-import frostaraMap from "../../../mapa-frostara.png";
-import verdantiaMap from "../../../mapa-verdantia.png";
+import petrolinaLogo from "../../../petrolina-logo.svg";
+import manausLogo from "../../../manaus-logo.svg";
+import pelotasLogo from "../../../pelotas-logo.svg";
+import petrolinaPanel from "../../../petrolina-panel.svg";
+import manausPanel from "../../../manaus-panel.svg";
+import pelotasPanel from "../../../pelotas-panel.svg";
+import petrolinaMap from "../../../petrolina-map.svg";
+import manausMap from "../../../manaus-map.svg";
+import pelotasMap from "../../../pelotas-map.svg";
 import type { CitySlug } from "../../types/city";
 
 export const auroraLogo = projectAuroraLogo;
@@ -26,28 +23,28 @@ export const cityAssets: Record<
     accentSoft: string;
   }
 > = {
-  solara: {
-    logo: solaraLogo,
-    heroImage: solaraLandscape,
-    secondaryImage: solaraStreetview,
-    mapImage: solaraMap,
-    accent: "#d7a34f",
-    accentSoft: "#ffcf80",
+  petrolina: {
+    logo: petrolinaLogo,
+    heroImage: petrolinaPanel,
+    secondaryImage: petrolinaPanel,
+    mapImage: petrolinaMap,
+    accent: "#FF8C00",
+    accentSoft: "#FFBF00",
   },
-  frostara: {
-    logo: frostaraLogo,
-    heroImage: frostaraLandscape,
-    secondaryImage: frostaraStreetview,
-    mapImage: frostaraMap,
-    accent: "#69bff3",
-    accentSoft: "#9fe7ff",
+  manaus: {
+    logo: manausLogo,
+    heroImage: manausPanel,
+    secondaryImage: manausPanel,
+    mapImage: manausMap,
+    accent: "#FF3131",
+    accentSoft: "#FF8B6E",
   },
-  verdantia: {
-    logo: verdantiaLogo,
-    heroImage: verdantiaLandscape,
-    secondaryImage: verdantiaStreetview,
-    mapImage: verdantiaMap,
-    accent: "#5fbc8d",
-    accentSoft: "#92e0bc",
+  pelotas: {
+    logo: pelotasLogo,
+    heroImage: pelotasPanel,
+    secondaryImage: pelotasPanel,
+    mapImage: pelotasMap,
+    accent: "#7D93A8",
+    accentSoft: "#B8C9D9",
   },
 };

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Selo de Petrolina">
+  <rect width="240" height="240" rx="36" fill="#111214"/>
+  <rect x="14" y="14" width="212" height="212" rx="28" fill="none" stroke="#FF3131" stroke-width="4"/>
+  <path d="M42 174V64h83c34 0 53 18 53 45 0 29-20 46-56 46H78v19H42Zm36-47h39c17 0 25-6 25-17 0-12-9-18-25-18H78v35Z" fill="#FFBF00"/>
+  <text x="42" y="198" fill="#F3E7D3" font-family="Arial, sans-serif" font-size="26" font-weight="700">PETROLINA</text>
+</svg>

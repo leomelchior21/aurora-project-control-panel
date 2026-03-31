@@ -3,60 +3,93 @@ import type { SystemStatus } from "../../../types/city";
 
 const lowIsBad = [
   /shade/i,
+  /sombra/i,
   /reuse/i,
+  /reuso/i,
   /clean/i,
+  /limp/i,
   /capture/i,
+  /captura/i,
   /protected/i,
+  /proteg/i,
   /cooling/i,
   /storage/i,
+  /armazen/i,
   /adapted/i,
   /comfort/i,
+  /confort/i,
   /walk/i,
   /green/i,
+  /verde/i,
   /survival/i,
+  /vida/i,
   /heating access/i,
+  /acesso/i,
   /fresh air/i,
   /airflow quality/i,
+  /qualidade/i,
   /transit/i,
-  /access/i,
   /resistant/i,
-  /quality/i,
+  /resistent/i,
   /drainage/i,
+  /drenagem/i,
   /ventilation/i,
+  /ventila/i,
+  /efici/i,
+  /oxigena/i,
 ];
 
 const highIsBad = [
   /temp/i,
+  /calor/i,
   /heat/i,
   /incident/i,
+  /inciden/i,
   /loss/i,
+  /perda/i,
   /evaporation/i,
+  /evapora/i,
   /consumption/i,
+  /consumo/i,
   /use$/i,
   /aqi/i,
   /smoke/i,
   /dust/i,
+  /esgoto/i,
+  /lixo/i,
   /uv/i,
   /exposure/i,
+  /expos/i,
   /turbulence/i,
   /waste/i,
+  /despejo/i,
   /shortage/i,
+  /falta/i,
   /informal/i,
   /commute/i,
   /energy\/trip/i,
   /expansion/i,
   /flood/i,
+  /umidade/i,
   /untreated/i,
-  /humidity/i,
+  /mofo/i,
   /blockage/i,
+  /bloque/i,
   /blackout/i,
+  /sobrecarga/i,
   /organic/i,
   /risk/i,
+  /risco/i,
   /fossil/i,
+  /fóssil/i,
   /cost/i,
+  /gasto/i,
   /failure/i,
+  /falha/i,
   /accident/i,
+  /severo/i,
   /human impact/i,
+  /impacto/i,
 ];
 
 function extractNumber(value: string) {
@@ -67,15 +100,15 @@ function extractNumber(value: string) {
 function classifyWordValue(value: string) {
   const normalized = value.toLowerCase();
 
-  if (/(critical|severe|very high|frequent|high|low|weak|limited|unstable|fossil)/i.test(normalized)) {
+  if (/(critical|severe|very high|frequent|high|low|weak|limited|unstable|fossil|crítico|critico|alto|altíssima|altissima|baixa|baixo|severo|severa|frequente|bruto|morto)/i.test(normalized)) {
     return "critical" satisfies SystemStatus;
   }
 
-  if (/(attention|moderate|occasional|medium)/i.test(normalized)) {
+  if (/(attention|moderate|occasional|medium|atenção|atencao|moderado|moderada|elevada|elevado)/i.test(normalized)) {
     return "attention" satisfies SystemStatus;
   }
 
-  if (/(nominal|stable|good)/i.test(normalized)) {
+  if (/(nominal|stable|good|estável|estavel|bom|boa)/i.test(normalized)) {
     return "nominal" satisfies SystemStatus;
   }
 

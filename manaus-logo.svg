@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Selo de Manaus">
+  <rect width="240" height="240" rx="36" fill="#111214"/>
+  <rect x="14" y="14" width="212" height="212" rx="28" fill="none" stroke="#FF3131" stroke-width="4"/>
+  <path d="M40 176V64h27l33 51 33-51h27v112h-34v-55l-26 39h-2l-26-39v55H40Z" fill="#FF3131"/>
+  <text x="40" y="198" fill="#F3E7D3" font-family="Arial, sans-serif" font-size="28" font-weight="700">MANAUS</text>
+</svg>

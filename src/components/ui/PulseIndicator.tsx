@@ -10,10 +10,10 @@ export function PulseIndicator({ status }: { status: SystemStatus }) {
       <motion.span
         className="absolute h-2.5 w-2.5 rounded-full"
         style={{ backgroundColor: color }}
-        animate={{ scale: [1, 1.9, 1], opacity: [0.7, 0, 0.7] }}
-        transition={{ duration: 2.2, repeat: Infinity }}
+        animate={{ scale: [1, 2.2, 1], opacity: [0.8, 0.04, 0.8] }}
+        transition={{ duration: status === "critical" ? 1.2 : 2, repeat: Infinity }}
       />
-      <span className="relative z-10 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="relative z-10 h-2.5 w-2.5 rounded-full shadow-[0_0_12px_currentColor]" style={{ backgroundColor: color, color }} />
     </div>
   );
 }

@@ -9,7 +9,7 @@ export function SystemsOverviewGrid({ items }: { items: CityOverviewItem[] }) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-[22px] border p-4"
+          className={`rounded-[22px] border p-4 ${item.status === "critical" ? "critical-siren" : ""}`}
           style={{
             borderColor: `${getStatusColor(item.status)}33`,
             background: `linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)), linear-gradient(140deg, ${getStatusColor(item.status)}16, transparent 46%)`,

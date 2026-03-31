@@ -1,12 +1,12 @@
-import { frostara } from "./frostara";
-import { solara } from "./solara";
-import { verdantia } from "./verdantia";
+import { manaus } from "./manaus";
+import { pelotas } from "./pelotas";
+import { petrolina } from "./petrolina";
 import type { CityData, CitySlug } from "../../types/city";
 
-export const cityCollection: CityData[] = [solara, frostara, verdantia];
+export const cityCollection: CityData[] = [petrolina, manaus, pelotas];
 
 export const cityMap: Record<CitySlug, CityData> = {
-  solara,
-  frostara,
-  verdantia,
+  petrolina,
+  manaus,
+  pelotas,
 };

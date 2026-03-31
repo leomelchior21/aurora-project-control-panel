@@ -21,7 +21,7 @@ export function CitySwitcher({
         onClick={onToggle}
         className="flex w-full items-center justify-between rounded-[18px] border border-amber-400/40 bg-gradient-to-r from-amber-400/18 via-amber-300/12 to-orange-400/18 px-4 py-3 text-left text-sm font-medium text-amber-100 shadow-[0_0_28px_rgba(251,191,36,0.15)] transition hover:border-amber-300/60 hover:from-amber-300/24 hover:to-orange-300/24"
       >
-        <span>Switch city</span>
+        <span>Trocar cidade</span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.24 }}>
           <ChevronDown className="h-4 w-4" />
         </motion.div>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Painel visual de Pelotas">
+  <rect width="1600" height="900" fill="#0C0D11"/>
+  <rect y="560" width="1600" height="340" fill="#111318"/>
+  <path d="M0 640 C180 620 360 760 640 700 S1090 610 1600 690 V900 H0 Z" fill="#1A2027"/>
+  <rect x="300" y="230" width="210" height="360" fill="#2B2F36"/>
+  <rect x="548" y="250" width="170" height="340" fill="#30353D"/>
+  <rect x="744" y="210" width="196" height="380" fill="#272B31"/>
+  <rect x="986" y="260" width="180" height="330" fill="#2F343B"/>
+  <path d="M0 178 C290 130 560 240 880 170 S1290 150 1600 210" fill="none" stroke="#95A8BD" stroke-width="22" stroke-linecap="round" opacity="0.45"/>
+  <path d="M520 260 C540 320 520 420 548 590" fill="none" stroke="#B7C7D7" stroke-width="4" opacity="0.5"/>
+  <path d="M920 240 C948 300 930 420 962 590" fill="none" stroke="#B7C7D7" stroke-width="4" opacity="0.5"/>
+  <text x="96" y="122" fill="#F3E7D3" font-family="Arial, sans-serif" font-size="64" font-weight="700">PELOTAS</text>
+  <text x="98" y="172" fill="#FFBF00" font-family="Arial, sans-serif" font-size="28" letter-spacing="5">UMIDADE, MINUANO E CALOR QUE VAZA</text>
+  <text x="96" y="784" fill="#D7C7AE" font-family="Arial, sans-serif" font-size="30">As paredes choram, o mofo cresce e a energia paga nao fica dentro da casa.</text>
+</svg>

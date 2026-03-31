@@ -6,11 +6,11 @@
 
 :root {
   color-scheme: dark;
-  color: #edf3ff;
+  color: #f4ead8;
   background:
-    radial-gradient(circle at top, rgba(91, 192, 255, 0.1), transparent 22%),
-    radial-gradient(circle at 85% 18%, rgba(215, 163, 79, 0.12), transparent 20%),
-    linear-gradient(155deg, #040916 0%, #07101d 45%, #050814 100%);
+    radial-gradient(circle at top, rgba(255, 49, 49, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(255, 191, 0, 0.08), transparent 20%),
+    linear-gradient(155deg, #09090b 0%, #111214 48%, #0a0a0c 100%);
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
 }
 
@@ -28,9 +28,9 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at top, rgba(91, 192, 255, 0.1), transparent 22%),
-    radial-gradient(circle at 85% 18%, rgba(215, 163, 79, 0.12), transparent 20%),
-    linear-gradient(155deg, #040916 0%, #07101d 45%, #050814 100%);
+    radial-gradient(circle at top, rgba(255, 49, 49, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(255, 191, 0, 0.08), transparent 20%),
+    linear-gradient(155deg, #09090b 0%, #111214 48%, #0a0a0c 100%);
 }
 
 #root {
@@ -41,10 +41,10 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(10, 16, 29, 0.92), rgba(6, 10, 20, 0.96)),
+    linear-gradient(180deg, rgba(20, 20, 24, 0.96), rgba(10, 10, 12, 0.98)),
     linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 34%);
   backdrop-filter: blur(18px);
-  box-shadow: 0 22px 70px rgba(3, 7, 18, 0.34);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.4);
 }
 
 .aurora-panel::before {
@@ -53,15 +53,49 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(130deg, rgba(255, 255, 255, 0.06), transparent 28%),
-    linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02));
+    linear-gradient(130deg, rgba(255, 255, 255, 0.04), transparent 24%),
+    linear-gradient(180deg, transparent, rgba(255, 49, 49, 0.02));
 }
 
 .aurora-card {
+  position: relative;
   background:
-    linear-gradient(180deg, rgba(12, 19, 34, 0.88), rgba(7, 12, 24, 0.96)),
+    linear-gradient(180deg, rgba(18, 19, 22, 0.94), rgba(9, 10, 12, 0.98)),
     linear-gradient(130deg, rgba(255, 255, 255, 0.03), transparent 34%);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.aurora-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+.aurora-photo {
+  filter: saturate(0.45) contrast(1.08) brightness(0.84);
+  transform: translate3d(0, 0, 0);
+}
+
+.critical-siren {
+  box-shadow:
+    0 0 0 1px rgba(255, 49, 49, 0.1) inset,
+    0 0 18px rgba(255, 49, 49, 0.12);
+  animation: criticalPulse 1.8s ease-in-out infinite;
+}
+
+.data-scan::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(255, 191, 0, 0.08) 50%, transparent 100%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 7px);
+  background-size: 100% 200%, 100% 100%;
+  animation: scanSweep 5.5s linear infinite;
+  opacity: 0.3;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -70,9 +104,32 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.24);
+  background: rgba(255, 191, 0, 0.2);
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.03);
+}
+
+@keyframes criticalPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 49, 49, 0.08) inset,
+      0 0 12px rgba(255, 49, 49, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 49, 49, 0.16) inset,
+      0 0 28px rgba(255, 49, 49, 0.18);
+  }
+}
+
+@keyframes scanSweep {
+  0% {
+    background-position: 0 -180%, 0 0;
+  }
+  100% {
+    background-position: 0 180%, 0 0;
+  }
 }

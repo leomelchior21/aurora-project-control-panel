@@ -3,16 +3,18 @@ export default {
     theme: {
         extend: {
             boxShadow: {
-                aurora: "0 24px 80px rgba(5, 10, 32, 0.35)",
+                aurora: "0 24px 80px rgba(0, 0, 0, 0.42)",
             },
             colors: {
-                ink: "#06111f",
-                mist: "#d9e4f1",
-                flare: "#f4c76c",
+                ink: "#111214",
+                mist: "#f3e7d3",
+                flare: "#ffbf00",
+                signal: "#ff3131",
+                anthracite: "#09090b",
             },
             fontFamily: {
                 display: ['"Bebas Neue"', '"Arial Narrow"', "sans-serif"],
-                headline: ['"Monument Extended"', '"Space Grotesk"', '"Segoe UI"', "sans-serif"],
+                headline: ['"Bebas Neue"', '"Space Grotesk"', '"Segoe UI"', "sans-serif"],
                 body: ['"Space Grotesk"', '"Segoe UI"', "sans-serif"],
             },
             keyframes: {

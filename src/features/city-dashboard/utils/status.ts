@@ -3,21 +3,21 @@ import type { SystemStatus } from "../../../types/city";
 export function getStatusColor(status: SystemStatus) {
   switch (status) {
     case "critical":
-      return "#ff6b6b";
+      return "#FF3131";
     case "attention":
-      return "#f7b84b";
+      return "#FFBF00";
     default:
-      return "#53d48a";
+      return "#8D98A8";
   }
 }
 
 export function getStatusLabel(status: SystemStatus) {
   switch (status) {
     case "critical":
-      return "Critical";
+      return "Crítico";
     case "attention":
-      return "Attention";
+      return "Atenção";
     default:
-      return "Nominal";
+      return "Estável";
   }
 }
