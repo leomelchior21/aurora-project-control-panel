@@ -14,10 +14,10 @@ export function getStatusColor(status: SystemStatus) {
 export function getStatusLabel(status: SystemStatus) {
   switch (status) {
     case "critical":
-      return "Crítico";
+      return "Critical";
     case "attention":
-      return "Atenção";
+      return "Attention";
     default:
-      return "Estável";
+      return "Stable";
   }
 }

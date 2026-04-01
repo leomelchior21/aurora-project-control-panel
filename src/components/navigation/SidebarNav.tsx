@@ -9,23 +9,27 @@ export function SidebarNav({
   activeLayer,
   onSelectLayer,
   onSelectCity,
+  compact = false,
 }: {
   city: CityData;
   activeLayer: LayerKey;
   onSelectLayer: (layer: LayerKey) => void;
   onSelectCity: (slug: CityData["slug"]) => void;
+  compact?: boolean;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const visibleLayers = city.layers.filter((layer) =>
+    ["water", "energy", "air", "temperature", "waste", "housing", "transportation"].includes(layer.key),
+  );
 
   return (
-    <aside className="aurora-panel flex h-full flex-col gap-4 rounded-[30px] border border-white/10 p-4">
-      <SidebarCityHeader city={city} />
-      <CitySwitcher currentCity={city} open={switcherOpen} onToggle={() => setSwitcherOpen((current) => !current)} onSelectCity={onSelectCity} />
-      <div className="scrollbar-thin flex-1 overflow-auto pr-1">
-        <div className="grid gap-1.5">
-          <LayerNavItem layerKey="mission-brief" label="Dossie" active={activeLayer === "mission-brief"} onClick={() => onSelectLayer("mission-brief")} />
-          <LayerNavItem layerKey="compare-cities" label="Comparar Pressoes" active={activeLayer === "compare-cities"} onClick={() => onSelectLayer("compare-cities")} />
-          {city.layers.map((layer) => (
+    <aside className={compact ? "aurora-panel icon-tray flex h-full flex-col items-center gap-3 rounded-[28px] border border-white/10 p-3" : "aurora-panel flex h-full flex-col gap-4 rounded-[30px] border border-white/10 p-4"}>
+      {!compact ? <SidebarCityHeader city={city} /> : null}
+      {!compact ? <CitySwitcher currentCity={city} open={switcherOpen} onToggle={() => setSwitcherOpen((current) => !current)} onSelectCity={onSelectCity} /> : null}
+      <div className={compact ? "flex flex-1 flex-col items-center gap-2" : "scrollbar-thin flex-1 overflow-auto pr-1"}>
+        <div className={compact ? "flex flex-col items-center gap-2" : "grid gap-1.5"}>
+          <LayerNavItem layerKey="mission-brief" label="Home" active={activeLayer === "mission-brief"} onClick={() => onSelectLayer("mission-brief")} compact={compact} />
+          {visibleLayers.map((layer) => (
             <LayerNavItem
               key={layer.key}
               layerKey={layer.key}
@@ -33,8 +37,20 @@ export function SidebarNav({
               status={layer.status}
               active={activeLayer === layer.key}
               onClick={() => onSelectLayer(layer.key)}
+              compact={compact}
             />
           ))}
+          {compact ? (
+            <LayerNavItem
+              layerKey="compare-cities"
+              label="Compare"
+              active={activeLayer === "compare-cities"}
+              onClick={() => onSelectLayer("compare-cities")}
+              compact
+            />
+          ) : (
+            <LayerNavItem layerKey="compare-cities" label="Compare" active={activeLayer === "compare-cities"} onClick={() => onSelectLayer("compare-cities")} />
+          )}
         </div>
       </div>
     </aside>

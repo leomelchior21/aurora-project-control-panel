@@ -8,9 +8,9 @@
   color-scheme: dark;
   color: #f4ead8;
   background:
-    radial-gradient(circle at top, rgba(255, 49, 49, 0.12), transparent 24%),
+    radial-gradient(circle at top, rgba(255, 49, 49, 0.16), transparent 24%),
     radial-gradient(circle at 82% 18%, rgba(255, 191, 0, 0.08), transparent 20%),
-    linear-gradient(155deg, #09090b 0%, #111214 48%, #0a0a0c 100%);
+    linear-gradient(155deg, #0d1117 0%, #0f141b 48%, #090d12 100%);
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
 }
 
@@ -28,9 +28,9 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at top, rgba(255, 49, 49, 0.12), transparent 24%),
+    radial-gradient(circle at top, rgba(255, 49, 49, 0.16), transparent 24%),
     radial-gradient(circle at 82% 18%, rgba(255, 191, 0, 0.08), transparent 20%),
-    linear-gradient(155deg, #09090b 0%, #111214 48%, #0a0a0c 100%);
+    linear-gradient(155deg, #0d1117 0%, #0f141b 48%, #090d12 100%);
 }
 
 #root {
@@ -41,7 +41,7 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(20, 20, 24, 0.96), rgba(10, 10, 12, 0.98)),
+    linear-gradient(180deg, rgba(15, 19, 26, 0.96), rgba(9, 13, 18, 0.98)),
     linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 34%);
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 72px rgba(0, 0, 0, 0.4);
@@ -60,7 +60,7 @@ body {
 .aurora-card {
   position: relative;
   background:
-    linear-gradient(180deg, rgba(18, 19, 22, 0.94), rgba(9, 10, 12, 0.98)),
+    linear-gradient(180deg, rgba(14, 17, 23, 0.94), rgba(7, 11, 16, 0.98)),
     linear-gradient(130deg, rgba(255, 255, 255, 0.03), transparent 34%);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -111,6 +111,78 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.glossy-nav::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 32%),
+    linear-gradient(90deg, rgba(255, 191, 0, 0.08), transparent 36%, rgba(255, 49, 49, 0.08));
+}
+
+.nav-chip {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  color: #d0d7e1;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.nav-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 191, 0, 0.25);
+  color: white;
+}
+
+.nav-chip-active {
+  color: white;
+  border-color: rgba(255, 191, 0, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(255, 191, 0, 0.14) inset,
+    0 0 20px rgba(255, 191, 0, 0.12);
+}
+
+.icon-tray {
+  background:
+    linear-gradient(180deg, rgba(15, 19, 26, 0.98), rgba(9, 13, 18, 0.98)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+.social-shell::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%),
+    linear-gradient(180deg, rgba(255, 49, 49, 0.06), transparent 24%);
+}
+
+.ticker-frame {
+  position: relative;
+}
+
+.ticker-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(13, 17, 23, 0.95), transparent 10%, transparent 88%, rgba(13, 17, 23, 0.95)),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0 2px, transparent 2px 8px);
+}
+
+.ticker-column {
+  display: flex;
+  flex-direction: column;
+  animation: tickerScroll 22s linear infinite;
+}
+
+.ticker-frame:hover .ticker-column {
+  animation-play-state: paused;
+}
+
 @keyframes criticalPulse {
   0%,
   100% {
@@ -131,5 +203,14 @@ body {
   }
   100% {
     background-position: 0 180%, 0 0;
+  }
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
   }
 }

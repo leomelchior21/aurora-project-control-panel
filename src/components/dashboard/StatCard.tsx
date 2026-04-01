@@ -7,19 +7,19 @@ import { LiveValue } from "../ui/LiveValue";
 function getInvestigationQuestion(label: string, status: "critical" | "attention" | "nominal") {
   const normalized = label.toLowerCase();
 
-  if (/água|agua|esgoto|rio|drenagem|igarapé|igarape/.test(normalized)) {
-    return "Onde esse sistema falhou antes da água chegar a este ponto?";
+  if (/water|sewage|river|drain|igarap/.test(normalized)) {
+    return "Where did this water system fail before it reached this point?";
   }
 
-  if (/energia|solar|consumo|pico|custo|perda/.test(normalized)) {
-    return "Qual dependência oculta está empurrando este gasto para cima?";
+  if (/energy|solar|demand|peak|cost|loss|lighting/.test(normalized)) {
+    return "Which hidden dependency is pushing this energy burden upward?";
   }
 
-  if (/calor|temperatura|umidade|mofo|risco/.test(normalized)) {
-    return "O que torna este ambiente tão hostil para quem vive aqui todos os dias?";
+  if (/heat|temperature|humidity|mold|risk|air/.test(normalized)) {
+    return "What makes this environment more hostile than the main number alone suggests?";
   }
 
-  return status === "critical" ? "Onde esse sistema falhou?" : "Qual dependência oculta existe aqui?";
+  return status === "critical" ? "Where did this system fail?" : "What hidden dependency is present here?";
 }
 
 export function StatCard({
@@ -62,7 +62,7 @@ export function StatCard({
       {note ? <p className="mt-3 text-sm text-slate-400">{note}</p> : null}
       {isInvestigative && promptOpen ? (
         <div className="mt-4 rounded-[18px] border border-white/10 bg-black/30 p-3">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300">Pergunta investigativa</p>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300">Investigative prompt</p>
           <p className="mt-2 text-sm text-slate-200">{getInvestigationQuestion(label, tone.status)}</p>
         </div>
       ) : null}

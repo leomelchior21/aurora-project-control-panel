@@ -21,16 +21,18 @@ export function MissionBriefView({ city }: { city: CityData }) {
             <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-slate-950/50 text-white">
               <Expand className="h-4 w-4" />
             </span>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#090909] via-[#090909]/70 to-transparent px-6 py-5">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Cenário sob pressão</p>
-              <p className="mt-2 max-w-2xl text-sm text-slate-200">Observe o território antes de olhar os números. O cenário já entrega sinais de desigualdade, desgaste e risco.</p>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/70 to-transparent px-6 py-5">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Stage under pressure</p>
+              <p className="mt-2 max-w-2xl text-sm text-slate-200">Read the territory before the metrics. The scene already signals inequality, wear, and risk.</p>
             </div>
           </button>
+
           <div className="grid gap-4">
             <div className="aurora-panel rounded-[30px] border border-white/10 p-6">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Leitura inicial</p>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Starting brief</p>
               <p className="mt-4 text-base leading-7 text-slate-200">{city.missionBrief}</p>
             </div>
+
             <button
               type="button"
               onClick={() => setExpandedImage(city.secondaryImage)}
@@ -40,9 +42,9 @@ export function MissionBriefView({ city }: { city: CityData }) {
               <span className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-slate-950/50 text-white">
                 <Expand className="h-4 w-4" />
               </span>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#090909] via-[#090909]/65 to-transparent px-5 py-4">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Streetview negativo</p>
-                <p className="mt-2 text-sm text-slate-200">Menos saturação, mais contraste: o foco sai da paisagem e vai para o desgaste do sistema.</p>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/65 to-transparent px-5 py-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Negative streetview</p>
+                <p className="mt-2 text-sm text-slate-200">Lower saturation and sharper contrast push attention toward the strain inside the system.</p>
               </div>
             </button>
           </div>
@@ -50,7 +52,7 @@ export function MissionBriefView({ city }: { city: CityData }) {
 
         <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
           <div className="aurora-panel rounded-[30px] border border-white/10 p-6">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Fatos críticos</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Critical facts</p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {city.macroStats.map((stat) => (
                 <StatCard key={stat.label} label={stat.label} value={stat.value} color={city.accent} />
@@ -59,7 +61,7 @@ export function MissionBriefView({ city }: { city: CityData }) {
           </div>
 
           <div className="aurora-panel rounded-[30px] border border-white/10 p-6">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Camadas em alerta</p>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Published failure layers</p>
             <div className="mt-5">
               <SystemsOverviewGrid items={city.systemsOverview} />
             </div>
@@ -75,8 +77,8 @@ export function MissionBriefView({ city }: { city: CityData }) {
             <img src={city.mapImage} alt={`${city.name} map`} className="aurora-photo h-[320px] w-full object-cover transition duration-500 group-hover:scale-[1.01]" />
             <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 bg-gradient-to-b from-slate-950/78 via-slate-950/28 to-transparent px-5 py-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.28em] text-slate-300">Mapa da pressão</p>
-                <p className="mt-2 text-sm text-slate-200">Território, desigualdade e pontos de ruptura em uma mesma leitura.</p>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-slate-300">Pressure map</p>
+                <p className="mt-2 text-sm text-slate-200">Territory, inequality, and breaking points in one reading.</p>
               </div>
               <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-slate-950/50 text-white">
                 <Expand className="h-4 w-4" />

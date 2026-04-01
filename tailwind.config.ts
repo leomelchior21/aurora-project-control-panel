@@ -8,11 +8,11 @@ export default {
         aurora: "0 24px 80px rgba(0, 0, 0, 0.42)",
       },
       colors: {
-        ink: "#111214",
+        ink: "#0f141b",
         mist: "#f3e7d3",
         flare: "#ffbf00",
         signal: "#ff3131",
-        anthracite: "#09090b",
+        anthracite: "#0D1117",
       },
       fontFamily: {
         display: ['"Bebas Neue"', '"Arial Narrow"', "sans-serif"],

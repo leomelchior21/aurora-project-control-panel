@@ -40,6 +40,21 @@ const statusScore: Record<SystemStatus, number> = {
   nominal: 32,
 };
 
+const criticalConnections = [
+  {
+    title: "Inefficiency",
+    summary: "Compare Petrolina's wasted sun with Pelotas' wasted heat. Different climates, same systemic leakage.",
+  },
+  {
+    title: "Inequity",
+    summary: "Compare water access in the semi-arid with flood and waste exposure in the rainforest. Pressure does not land equally.",
+  },
+  {
+    title: "Failure of Design",
+    summary: "Compare missing shade in Petrolina with missing insulation in Pelotas. The built form decides who suffers first.",
+  },
+];
+
 function getLayer(city: CityData, key: SystemLayer["key"]) {
   return city.layers.find((layer) => layer.key === key);
 }
@@ -62,10 +77,10 @@ function layerPressureScore(layer?: SystemLayer) {
 }
 
 function getMatrixTone(value: number | null) {
-  if (value === null) return { label: "Sem dado", color: "rgba(141,152,168,0.9)" };
-  if (value >= 80) return { label: "Crítico", color: getStatusColor("critical") };
-  if (value >= 50) return { label: "Atenção", color: getStatusColor("attention") };
-  return { label: "Estável", color: getStatusColor("nominal") };
+  if (value === null) return { label: "No data", color: "rgba(141,152,168,0.9)" };
+  if (value >= 80) return { label: "Critical", color: getStatusColor("critical") };
+  if (value >= 50) return { label: "Attention", color: getStatusColor("attention") };
+  return { label: "Lower pressure", color: getStatusColor("nominal") };
 }
 
 function makeCompareCharts(): ChartSpec[] {
@@ -83,20 +98,20 @@ function makeCompareCharts(): ChartSpec[] {
   return [
     {
       type: "stacked-bar",
-      title: "Mistura de pressão",
-      subtitle: "Camadas críticas e em atenção por cidade",
+      title: "Published Failure Mix",
+      subtitle: "Critical and attention layers by city",
       data: pressureBarData,
       series: [
-        { key: "critical", label: "Crítico", color: getStatusColor("critical") },
-        { key: "attention", label: "Atenção", color: getStatusColor("attention") },
+        { key: "critical", label: "Critical", color: getStatusColor("critical") },
+        { key: "attention", label: "Attention", color: getStatusColor("attention") },
       ],
     },
     {
       type: "bar",
-      title: "Pressão média publicada",
-      subtitle: "Severidade média deste recorte",
+      title: "Average Stress Signature",
+      subtitle: "Mean severity in the published layers",
       data: stressAverageData,
-      series: [{ key: "value", label: "Pressão", color: "#FFBF00" }],
+      series: [{ key: "value", label: "Pressure", color: "#FFBF00" }],
     },
   ];
 }
@@ -108,13 +123,13 @@ function CompactMatrixPanel({ compareKeys }: { compareKeys: Array<Exclude<LayerK
     <section className="aurora-panel rounded-[28px] border border-white/10 p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Leitura cruzada</p>
-          <h3 className="mt-2 text-2xl text-white">Matriz de pressão</h3>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-[#7D8590]">Systemic comparison</p>
+          <h3 className="mt-2 text-2xl text-white">Failure Matrix</h3>
         </div>
         <div className="inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
           {[
-            { key: "grid", label: "Grade" },
-            { key: "strips", label: "Faixas" },
+            { key: "grid", label: "Grid" },
+            { key: "strips", label: "Signal" },
           ].map((item) => (
             <button
               key={item.key}
@@ -142,8 +157,8 @@ function CompactMatrixPanel({ compareKeys }: { compareKeys: Array<Exclude<LayerK
           });
 
           return (
-            <div key={key} className="grid grid-cols-[110px_1fr] items-center gap-3">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
+            <div key={key} className="grid grid-cols-[130px_1fr] items-center gap-3">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[#7D8590]">{label}</p>
               {mode === "grid" ? (
                 <div className="grid gap-2 md:grid-cols-3">
                   {entries.map(({ city, value, tone }) => (
@@ -157,7 +172,7 @@ function CompactMatrixPanel({ compareKeys }: { compareKeys: Array<Exclude<LayerK
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[9px] uppercase tracking-[0.18em] text-slate-200">{city.name}</span>
-                        <span className="text-sm font-semibold text-white">{value ?? "—"}</span>
+                        <span className="text-sm font-semibold text-white">{value ?? "--"}</span>
                       </div>
                       <div className="mt-1.5 flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: tone.color }} />
@@ -181,7 +196,7 @@ function CompactMatrixPanel({ compareKeys }: { compareKeys: Array<Exclude<LayerK
                             }}
                           />
                         </div>
-                        <div className="w-10 text-right text-xs font-semibold text-white">{value ?? "—"}</div>
+                        <div className="w-10 text-right text-xs font-semibold text-white">{value ?? "--"}</div>
                       </div>
                     </div>
                   ))}
@@ -205,7 +220,7 @@ function SystemCompareGraphic({
   const available = entries.filter((entry): entry is { city: CityData; layer: SystemLayer } => Boolean(entry.layer));
 
   if (!available.length) {
-    return <p className="text-sm text-slate-400">Nenhum dado publicado para este eixo.</p>;
+    return <p className="text-sm text-slate-400">No published data for this axis.</p>;
   }
 
   const values = available.map(({ city, layer }) => ({
@@ -213,20 +228,6 @@ function SystemCompareGraphic({
     value: layerPressureScore(layer) ?? 0,
     color: city.accent,
   }));
-
-  if (systemKey === "temperature") {
-    return (
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={values} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
-          <CartesianGrid stroke={chartGridColor} vertical={false} />
-          <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
-          <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={28} />
-          <Tooltip contentStyle={chartTooltipStyle} />
-          <Line type="monotone" dataKey="value" stroke="#FF3131" strokeWidth={3} dot={{ r: 5, fill: "#FF3131" }} />
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  }
 
   if (systemKey === "water") {
     return (
@@ -260,6 +261,20 @@ function SystemCompareGraphic({
     );
   }
 
+  if (systemKey === "air") {
+    return (
+      <ResponsiveContainer width="100%" height={180}>
+        <LineChart data={values} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
+          <CartesianGrid stroke={chartGridColor} vertical={false} />
+          <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
+          <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={28} />
+          <Tooltip contentStyle={chartTooltipStyle} />
+          <Line type="monotone" dataKey="value" stroke="#FF3131" strokeWidth={3} dot={{ r: 5, fill: "#FF3131" }} />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  }
+
   return (
     <div className="grid gap-3">
       {values.map((item) => (
@@ -284,11 +299,31 @@ export function CompareCitiesView() {
   return (
     <div className="grid gap-4">
       <section className="aurora-panel rounded-[28px] border border-white/10 p-5">
-        <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Sem resposta pronta</p>
-        <h3 className="mt-2 font-headline text-[clamp(1.8rem,3vw,2.8rem)] leading-none text-white">Compare as pressões, não procure conforto.</h3>
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#FFBF00]">No ready-made answer</p>
+        <h3 className="mt-2 font-headline text-[clamp(1.8rem,3vw,2.8rem)] leading-none text-white">Find the common enemy.</h3>
         <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
-          Cada cidade publica só os eixos mais expostos deste recorte. Onde houver vazio, leia como ausência de dado publicado e não como ausência de problema.
+          Compare mode is not here to rank cities from better to worse. It is here to expose repeated logics of waste, inequality, and design failure.
         </p>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        {criticalConnections.map((item, index) => (
+          <div
+            key={item.title}
+            className="rounded-[26px] border p-5"
+            style={{
+              borderColor: index === 1 ? "rgba(255,191,0,0.26)" : "rgba(255,49,49,0.2)",
+              background:
+                index === 1
+                  ? "linear-gradient(180deg, rgba(14,17,23,0.98), rgba(9,13,18,0.98)), linear-gradient(140deg, rgba(255,191,0,0.14), transparent 48%)"
+                  : "linear-gradient(180deg, rgba(14,17,23,0.98), rgba(9,13,18,0.98)), linear-gradient(140deg, rgba(255,49,49,0.1), transparent 48%)",
+            }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.24em] text-[#7D8590]">Critical connection</p>
+            <h4 className="mt-3 text-2xl text-white">{item.title}</h4>
+            <p className="mt-3 text-sm leading-6 text-slate-300">{item.summary}</p>
+          </div>
+        ))}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
@@ -301,7 +336,7 @@ export function CompareCitiesView() {
               className="rounded-[28px] border p-5"
               style={{
                 borderColor: `${city.accent}33`,
-                background: `linear-gradient(180deg, rgba(16,16,18,0.94), rgba(9,10,12,0.98)), linear-gradient(140deg, ${city.accent}18, transparent 48%)`,
+                background: `linear-gradient(180deg, rgba(16,18,24,0.96), rgba(9,12,16,0.98)), linear-gradient(140deg, ${city.accent}18, transparent 48%)`,
               }}
             >
               <div className="flex items-start justify-between gap-4">
@@ -317,15 +352,15 @@ export function CompareCitiesView() {
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Camadas críticas</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#7D8590]">Critical layers</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{summary.critical}</p>
                 </div>
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Em atenção</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#7D8590]">Attention layers</p>
                   <p className="mt-3 text-3xl font-semibold text-white">{summary.attention}</p>
                 </div>
                 <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Maior pressão</p>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#7D8590]">Most exposed axis</p>
                   <p className="mt-3 text-lg font-semibold text-white">{summary.topLayer.label}</p>
                 </div>
               </div>
@@ -350,7 +385,7 @@ export function CompareCitiesView() {
             <div key={key} className="aurora-panel rounded-[28px] border border-white/10 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Mapa cruzado</p>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-[#7D8590]">Cross-read</p>
                   <h3 className="mt-2 text-xl text-white">{label}</h3>
                 </div>
               </div>
@@ -375,10 +410,10 @@ export function CompareCitiesView() {
                       <img src={city.logo} alt={`${city.name} logo`} className="h-11 w-11 object-contain" />
                       <div>
                         <p className="text-base text-white">{city.name}</p>
-                        <p className="mt-1 text-sm text-slate-300">{layer ? layer.state : "Eixo não publicado neste recorte."}</p>
+                        <p className="mt-1 text-sm text-slate-300">{layer ? layer.state : "This axis is not published in the current city dossier."}</p>
                       </div>
                     </div>
-                    {layer ? <StatusBadge status={layer.status} /> : <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Sem dado</span>}
+                    {layer ? <StatusBadge status={layer.status} /> : <span className="text-[11px] uppercase tracking-[0.22em] text-slate-500">No data</span>}
                   </div>
                 ))}
               </div>

@@ -30,46 +30,46 @@ function buildChartAriaLabel(chart: ChartSpec) {
       .map((entry) => Object.entries(entry).filter(([key]) => key !== "label").map(([key, value]) => `${key} ${value}`).join(", "))
       .map((value, index) => `${chart.data?.[index]?.label}: ${value}`)
       .join(". ");
-    return `Gráfico ${chart.title}. ${rows}.`;
+    return `Chart ${chart.title}. ${rows}.`;
   }
 
   if (chart.type === "donut" && chart.segments?.length) {
-    return `Gráfico de composição ${chart.title}. ${chart.segments.map((segment) => `${segment.label} ${segment.value}`).join(". ")}.`;
+    return `Composition chart ${chart.title}. ${chart.segments.map((segment) => `${segment.label} ${segment.value}`).join(". ")}.`;
   }
 
   if (chart.type === "heatmap" && chart.rows?.length) {
-    return `Mapa de calor ${chart.title}. ${chart.rows
+    return `Heatmap ${chart.title}. ${chart.rows
       .map((row) => `${row.label}: ${row.cells.map((cell) => `${cell.label} ${cell.value}`).join(", ")}`)
       .join(". ")}.`;
   }
 
   if ((chart.type === "radial" || chart.type === "progress") && chart.centerValue) {
-    return `${chart.title}. Valor central ${chart.centerValue}.`;
+    return `${chart.title}. Center value ${chart.centerValue}.`;
   }
 
-  return `Gráfico ${chart.title}.`;
+  return `Chart ${chart.title}.`;
 }
 
 function getChartQuestion(chart: ChartSpec) {
   const normalized = `${chart.title} ${chart.subtitle ?? ""}`.toLowerCase();
 
-  if (/esgoto|água|agua|rio|drenagem|igarap/.test(normalized)) {
-    return "Onde esse sistema falhou antes de a água carregar essa pressão?";
+  if (/sewage|water|river|drain|igarap/.test(normalized)) {
+    return "Where did this system fail before water started carrying this much pressure?";
   }
 
-  if (/energia|solar|matriz|custo|consumo|pico/.test(normalized)) {
-    return "Qual dependência escondida mantém esse sistema preso a gasto alto ou fonte suja?";
+  if (/energy|solar|grid|cost|demand|peak|lighting/.test(normalized)) {
+    return "Which hidden dependency keeps this system locked into high cost or dirty supply?";
   }
 
-  if (/calor|temperatura|umidade|mofo/.test(normalized)) {
-    return "O que faz o corpo sentir ainda mais pressão do que o dado principal já mostra?";
+  if (/heat|temperature|humidity|mold|air/.test(normalized)) {
+    return "What makes the body feel even more pressure than the headline number already shows?";
   }
 
-  if (/lixo|resíduo|residuo|descarte/.test(normalized)) {
-    return "Quando esse volume cresce, qual outro sistema começa a falhar junto?";
+  if (/waste|plastic|collection|dumping/.test(normalized)) {
+    return "When this volume grows, which other system begins to fail with it?";
   }
 
-  return "Qual dependência oculta este gráfico sugere, mesmo sem dizer a resposta?";
+  return "What hidden dependency does this chart suggest without saying it directly?";
 }
 
 function getPressureColor(value: number, max = 100) {
@@ -81,17 +81,17 @@ function getPressureColor(value: number, max = 100) {
 }
 
 function HeatmapBlock({ chart }: { chart: ChartSpec }) {
-  const isSectorMatrix = chart.title === "Matriz de pressão";
+  const isSectorMatrix = chart.title === "Failure Matrix";
 
   return (
     <div className={isSectorMatrix ? "grid gap-4" : "grid gap-3"}>
       {chart.rows?.map((row) => (
-        <div key={row.label} className="grid grid-cols-[96px_1fr] items-center gap-3">
+        <div key={row.label} className="grid grid-cols-[110px_1fr] items-center gap-3">
           <p className={isSectorMatrix ? "text-[11px] uppercase tracking-[0.22em] text-slate-500" : "text-xs uppercase tracking-[0.18em] text-slate-500"}>{row.label}</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {row.cells.map((cell) => {
               const toneColor = getPressureColor(cell.value);
-              const toneLabel = cell.value >= 80 ? "Crítico" : cell.value >= 50 ? "Atenção" : "Menor pressão";
+              const toneLabel = cell.value >= 80 ? "Critical" : cell.value >= 50 ? "Attention" : "Lower pressure";
 
               return (
                 <div
@@ -154,7 +154,7 @@ export function ChartRenderer({
   const [promptOpen, setPromptOpen] = useState(false);
   const primarySeries = chart.series?.[0];
   const secondarySeries = chart.series?.[1];
-  const isSectorMatrix = chart.type === "heatmap" && chart.title === "Matriz de pressão";
+  const isSectorMatrix = chart.type === "heatmap" && chart.title === "Failure Matrix";
   const ariaLabel = useMemo(() => buildChartAriaLabel(chart), [chart]);
   const radialColor = getPressureColor(chart.value ?? 0, chart.max ?? 100);
 
@@ -191,8 +191,8 @@ export function ChartRenderer({
               <XAxis dataKey="label" stroke={chartTextColor} tickLine={false} axisLine={false} />
               <YAxis stroke={chartTextColor} tickLine={false} axisLine={false} width={32} />
               <Tooltip contentStyle={chartTooltipStyle} />
-              {primarySeries ? <Area type="monotone" dataKey={primarySeries.key} stroke={primarySeries.color ?? "#FF3131"} fill={primarySeries.color ?? "#FF3131"} fillOpacity={0.2} /> : null}
-              {secondarySeries ? <Area type="monotone" dataKey={secondarySeries.key} stroke={secondarySeries.color ?? "#FFBF00"} fill={secondarySeries.color ?? "#FFBF00"} fillOpacity={0.14} /> : null}
+              {primarySeries ? <Area type="monotone" dataKey={primarySeries.key} stroke={primarySeries.color ?? "#FF3131"} fill={primarySeries.color ?? "#FF3131"} fillOpacity={0.18} /> : null}
+              {secondarySeries ? <Line type="monotone" dataKey={secondarySeries.key} stroke={secondarySeries.color ?? "#FFBF00"} strokeWidth={2.5} dot={false} /> : null}
             </AreaChart>
           </ResponsiveContainer>
         ) : chart.type === "bar" || chart.type === "stacked-bar" ? (
@@ -208,22 +208,36 @@ export function ChartRenderer({
             </BarChart>
           </ResponsiveContainer>
         ) : chart.type === "donut" ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Tooltip contentStyle={chartTooltipStyle} />
-              <Pie data={chart.segments?.map((segment) => ({ ...segment, value: Number(segment.value) }))} dataKey="value" nameKey="label" innerRadius={70} outerRadius={94} paddingAngle={4}>
-                {chart.segments?.map((segment, index) => <Cell key={segment.label} fill={donutColors[index % donutColors.length]} />)}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="relative h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Tooltip contentStyle={chartTooltipStyle} />
+                <Pie data={chart.segments?.map((segment) => ({ ...segment, value: Number(segment.value) }))} dataKey="value" nameKey="label" innerRadius={70} outerRadius={94} paddingAngle={4}>
+                  {chart.segments?.map((segment, index) => <Cell key={segment.label} fill={donutColors[index % donutColors.length]} />)}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            {chart.centerValue ? (
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-2xl font-semibold text-white">{chart.centerValue}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">{chart.centerLabel}</p>
+              </div>
+            ) : null}
+          </div>
         ) : chart.type === "radial" ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: chart.value ?? 0 }]} startAngle={90} endAngle={-270}>
-              <PolarAngleAxis type="number" domain={[0, chart.max ?? 100]} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={18} fill={radialColor} />
-              <Tooltip contentStyle={chartTooltipStyle} />
-            </RadialBarChart>
-          </ResponsiveContainer>
+          <div className="relative h-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: chart.value ?? 0 }]} startAngle={90} endAngle={-270}>
+                <PolarAngleAxis type="number" domain={[0, chart.max ?? 100]} tick={false} />
+                <RadialBar dataKey="value" cornerRadius={18} fill={radialColor} />
+                <Tooltip contentStyle={chartTooltipStyle} />
+              </RadialBarChart>
+            </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <p className="text-2xl font-semibold text-white">{chart.centerValue}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">{chart.centerLabel}</p>
+            </div>
+          </div>
         ) : chart.type === "progress" ? (
           <ProgressMeter chart={chart} />
         ) : chart.type === "heatmap" ? (
@@ -252,8 +266,8 @@ export function ChartRenderer({
           className="w-full text-left"
           aria-expanded={promptOpen}
         >
-          <p className="text-[10px] uppercase tracking-[0.24em] text-amber-300">Pergunta investigativa</p>
-          <p className="mt-2 text-sm text-slate-300">{promptOpen ? getChartQuestion(chart) : "Clique para abrir uma pista de leitura crítica."}</p>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-amber-300">Investigative prompt</p>
+          <p className="mt-2 text-sm text-slate-300">{promptOpen ? getChartQuestion(chart) : "Click to open a critical reading clue."}</p>
         </button>
       </div>
     </div>
