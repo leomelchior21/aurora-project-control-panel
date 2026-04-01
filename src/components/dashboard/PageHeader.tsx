@@ -4,16 +4,14 @@ import { StatusBadge } from "../ui/StatusBadge";
 const lensMap: Record<LayerKey, string[]> = {
   "mission-brief": ["Environment", "Efficiency", "Economy", "Equity"],
   "compare-cities": ["Environment", "Efficiency", "Economy", "Equity"],
-  temperature: ["Environment", "Equity"],
-  water: ["Environment", "Equity", "Efficiency"],
-  air: ["Environment", "Equity"],
-  sun: ["Environment", "Efficiency"],
-  wind: ["Environment", "Efficiency"],
   energy: ["Efficiency", "Economy", "Environment"],
+  water: ["Environment", "Equity", "Efficiency"],
+  climate: ["Environment", "Equity", "Design"],
+  air: ["Environment", "Health", "Equity"],
   waste: ["Environment", "Efficiency", "Equity"],
-  housing: ["Equity", "Economy", "Efficiency"],
-  transportation: ["Equity", "Efficiency"],
-  biodiversity: ["Environment", "Equity"],
+  mobility: ["Equity", "Access", "Efficiency"],
+  biodiversity: ["Environment", "Protection", "Equity"],
+  social: ["Voice", "Trust", "Response"],
 };
 
 export function PageHeader({
@@ -30,13 +28,13 @@ export function PageHeader({
     layerKey === "mission-brief"
       ? city.oneLineDescription
       : layerKey === "compare-cities"
-        ? `Drag one city against another and look for the common enemy: inefficiency, inequity, or design failure.`
+        ? "Switch layers and read the same system side by side. The goal is not to find a winner, but to see repeated failure patterns."
         : layer?.state ?? "";
   const lenses = lensMap[layerKey];
 
   return (
     <div
-      className="aurora-panel rounded-[28px] border border-white/10 p-6"
+      className="aurora-panel rounded-[28px] border border-white/10 p-5 md:p-6"
       style={{
         background: `linear-gradient(180deg, rgba(14,17,23,0.98), rgba(9,12,16,0.98)), linear-gradient(130deg, ${city.accent}18, transparent 48%)`,
       }}
@@ -44,7 +42,7 @@ export function PageHeader({
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-[#FFBF00]">{city.breadcrumbLabel}</p>
-          <h2 className="mt-3 font-headline text-[clamp(2.2rem,4vw,4rem)] leading-none text-white">{title}</h2>
+          <h2 className="mt-3 font-headline text-[clamp(2rem,4vw,3.5rem)] leading-none text-white">{title}</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{state}</p>
         </div>
 

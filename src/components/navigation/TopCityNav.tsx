@@ -17,8 +17,8 @@ export function TopCityNav({
     <div className="aurora-panel glossy-nav rounded-[28px] border border-white/10 px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-[#FFBF00]">Systemic Failure Reader</p>
-          <p className="mt-2 text-sm text-slate-300">Read the city as pressure, not promise.</p>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-[#FFBF00]">{city.name}</p>
+          <p className="mt-2 text-sm text-slate-300">{city.oneLineDescription}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CityData, LayerKey, SummaryMetric, SystemLayer } from "../../types/city";
 import { getMetricTone } from "../../features/city-dashboard/utils/metricTone";
 import { StatusBadge } from "../ui/StatusBadge";
@@ -7,39 +7,27 @@ import { ChartRenderer } from "../charts/ChartRenderer";
 import { AlertCard } from "./AlertCard";
 import { MetricIcon } from "../ui/MetricIcon";
 import { LiveValue } from "../ui/LiveValue";
+import { LayerTableCard } from "./LayerTableCard";
+import { socialPulseByCity } from "../../data/socialPulse";
+import { SocialFeedPanel } from "./SocialFeedPanel";
 
 function getPrompt(city: CityData, layer: SystemLayer, metric: SummaryMetric) {
   const key = `${city.slug}-${layer.key}-${metric.label}`.toLowerCase();
 
-  if (key.includes("petrolina-water")) {
-    return "If the river is this close, why does distribution still protect wealthy districts before peripheral ones?";
-  }
-
-  if (key.includes("petrolina-energy")) {
-    return "Who benefits when solar abundance exists, but the city remains locked into fossil dependence?";
-  }
-
-  if (key.includes("manaus-air")) {
-    return "What disappeared from the center so that heat, humidity, and trapped air now amplify each other?";
-  }
-
-  if (key.includes("manaus-waste")) {
-    return "When waste takes the water path, which system fails first: drainage, oxygen, or the neighborhood itself?";
-  }
-
-  if (key.includes("pelotas-housing")) {
-    return "Is cold the main problem, or the architecture that lets paid heat escape?";
-  }
-
-  if (key.includes("pelotas-energy")) {
-    return "How much of the electricity bill becomes real comfort, and how much disappears into leaks and losses?";
-  }
-
-  if (layer.status === "critical") {
-    return "Where did this system fail before this number ever appeared?";
-  }
-
+  if (key.includes("petrolina-water")) return "If water is visible in the landscape, why is reliability still shaped by income and location?";
+  if (key.includes("petrolina-climate")) return "How much of this climate pressure is natural, and how much is amplified by urban design?";
+  if (key.includes("manaus-air")) return "What disappeared from the urban core so heat, humidity, and pollution now reinforce one another?";
+  if (key.includes("manaus-waste")) return "When waste blocks the water path, which public system fails next?";
+  if (key.includes("pelotas-energy")) return "How much of this winter energy bill becomes comfort, and how much leaks away before it helps?";
+  if (key.includes("pelotas-social")) return "Which households feel this pressure first, and which ones can still absorb it?";
+  if (layer.status === "critical") return "Where did this system fail before this number became visible?";
+  if (layer.status === "nominal") return "What is this city doing better here, and what could still pull it backward?";
   return "What hidden dependency is still missing from the way this number is usually discussed?";
+}
+
+function chartSpan(index: number) {
+  if (index === 0 || index === 1) return "xl:col-span-3";
+  return "md:col-span-2 xl:col-span-2";
 }
 
 export function SystemLayerView({
@@ -54,18 +42,20 @@ export function SystemLayerView({
   const [activeMetric, setActiveMetric] = useState<SummaryMetric | null>(null);
   const [nexusHot, setNexusHot] = useState(false);
   const hasPetrolinaNexus = city.slug === "petrolina" && layer.key === "water";
+  const socialEntries = useMemo(() => (layer.key === "social" ? socialPulseByCity[city.slug] : []), [city.slug, layer.key]);
 
   return (
     <div className="grid gap-4">
-      <section className="aurora-panel rounded-[30px] border border-white/10 p-6">
+      <section className="aurora-panel rounded-[30px] border border-white/10 p-5 md:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Immediate read</p>
-            <p className="mt-3 max-w-3xl text-sm text-slate-300">{layer.miniSummary ?? layer.state}</p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">{layer.miniSummary ?? layer.state}</p>
           </div>
           <StatusBadge status={layer.status} />
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {layer.summaryStrip.map((item) => {
             const metricTone = getMetricTone(item.label, item.value);
 
@@ -92,18 +82,13 @@ export function SystemLayerView({
             );
           })}
         </div>
+
         {activeMetric ? (
           <div className="mt-4 rounded-[22px] border border-amber-400/25 bg-black/30 p-4">
             <p className="text-[10px] uppercase tracking-[0.26em] text-amber-300">Investigative prompt</p>
             <p className="mt-3 text-sm leading-6 text-slate-200">{getPrompt(city, layer, activeMetric)}</p>
           </div>
         ) : null}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {layer.stats.map((stat) => (
-          <StatCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} />
-        ))}
       </section>
 
       {hasPetrolinaNexus ? (
@@ -113,7 +98,7 @@ export function SystemLayerView({
               <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Hidden dependency</p>
               <h3 className="mt-2 font-headline text-[clamp(1.4rem,2.2vw,2rem)] leading-none text-white">Water pulls energy. Energy pushes pressure back into water.</h3>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                Hover the water charts and watch this card light up. That glow is the clue: pumping, treating, distributing, and losing water also consumes energy.
+                Hover the water charts and watch this card light up. Pumping, treating, distributing, and losing water also consumes energy.
               </p>
             </div>
             <button
@@ -127,14 +112,28 @@ export function SystemLayerView({
         </section>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        {layer.charts.map((chart) => (
-          <ChartRenderer
-            key={`${layer.key}-${chart.title}`}
-            chart={chart}
-            onHoverChange={hasPetrolinaNexus ? setNexusHot : undefined}
-          />
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {layer.stats.map((stat) => (
+          <StatCard key={stat.label} label={stat.label} value={stat.value} note={stat.note} />
         ))}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-6">
+        {layer.charts.map((chart, index) => (
+          <div key={`${layer.key}-${chart.title}`} className={chartSpan(index)}>
+            <ChartRenderer chart={chart} onHoverChange={hasPetrolinaNexus ? setNexusHot : undefined} />
+          </div>
+        ))}
+
+        <div className="xl:col-span-6">
+          <LayerTableCard table={layer.table} />
+        </div>
+
+        {layer.key === "social" ? (
+          <div className="xl:col-span-6">
+            <SocialFeedPanel entries={socialEntries} title={`${city.name} Social Feed`} subtitle="Posts are not evidence on their own, but they show where pressure becomes daily speech." />
+          </div>
+        ) : null}
       </section>
 
       {layer.alerts?.length ? (

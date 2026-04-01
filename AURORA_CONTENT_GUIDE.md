@@ -1,143 +1,130 @@
 # Project Aurora Brasil
 
-Este documento descreve a versao brasileira do Project Aurora, refatorada para Petrolina, Manaus e Pelotas e pensada para estudantes de 12 anos.
+Este documento descreve a versao atual do Project Aurora no recorte brasileiro. O projeto foi reorganizado como uma experiencia investigativa sobre pressao urbana para estudantes, usando Petrolina, Manaus e Pelotas como estudos de caso comparaveis.
 
-Aurora nao apresenta cidades como cartoes-postais. Ele apresenta cidades como sistemas sob pressao. O foco e investigativo: os dados nao entregam respostas prontas, nao oferecem solucoes fechadas e nao tentam aliviar a gravidade do que mostram. O objetivo e ensinar o aluno a olhar para um numero ruim e perguntar: onde esse sistema falhou?
+Aurora nao apresenta cidades como vitrines. Ele apresenta cidades como sistemas em disputa. O foco nao e dar respostas prontas, mas ajudar o usuario a cruzar sinais, perceber desigualdade e perguntar onde o sistema falhou antes do numero aparecer.
 
-## 1. Conceito da experiencia
+## 1. Conceito
 
-Aurora e uma experiencia digital de leitura critica sobre tres cidades brasileiras.
+Aurora e uma experiencia digital de leitura critica sobre territorio, infraestrutura, clima e vida cotidiana.
 
-- Petrolina mostra o nexo agua-energia no semi-arido.
-- Manaus mostra a perda dos caminhos de agua e dos servicos ecossistemicos.
-- Pelotas mostra a pobreza energetica, a umidade e a arquitetura inadequada ao frio.
+As tres cidades cumprem papeis complementares:
 
-Cada cidade funciona como um estudo de caso. Em vez de explicar o Brasil por uma narrativa unica, Aurora usa tres territorios com problemas diferentes para ensinar que pressao urbana sempre depende do lugar, do clima, da infraestrutura e da desigualdade.
+- Petrolina mostra o paradoxo entre sol, rio e servicos desiguais no semi-arido.
+- Manaus mostra o conflito entre floresta, asfalto, calor, poluicao e caminhos de agua bloqueados.
+- Pelotas mostra a pobreza energetica e a exposicao ao frio umido em uma cidade historica do sul.
+
+O objetivo nao e comparar qual cidade e pior. O objetivo e mostrar que o mesmo tipo de falha aparece de formas diferentes dependendo do clima, da forma urbana, da renda e da infraestrutura.
 
 ## 2. Objetivo pedagogico
 
 O projeto foi desenhado para:
 
 - estimular investigacao critica
-- tornar visiveis falhas sistemicas
-- mostrar relacoes entre clima, infraestrutura e vida cotidiana
-- ensinar leitura de graficos sem transformar a experiencia em aula expositiva
-- incentivar perguntas em vez de respostas fechadas
+- ensinar leitura de dados sem transformar a experiencia em aula expositiva
+- mostrar relacoes entre ambiente, eficiencia, economia e equidade
+- revelar como a pressao sistemica muda de cidade para cidade
+- incentivar perguntas em vez de solucoes automaticas
 
-O aluno nao deve sair com uma solucao pronta. Ele deve sair com novas perguntas:
+As perguntas que a interface quer provocar sao:
 
 - quem fica com a parte pior do sistema?
-- que dependencia esta escondida?
-- o problema esta no recurso, no acesso ou na distribuicao?
-- o que parece natural, mas na verdade foi produzido por falha urbana?
+- o problema esta no recurso, no acesso ou no desenho da cidade?
+- o que parece natural, mas foi agravado por uma escolha urbana?
+- qual camada esta indo relativamente melhor e por que?
+- que dependencia escondida conecta um sistema ao outro?
 
-## 3. Como a experiencia funciona
+## 3. Estrutura atual da experiencia
 
-Aurora tem uma sequencia simples:
+O fluxo principal hoje e:
 
-1. Abertura com loading de leitura critica.
-2. Tela inicial com as tres cidades.
-3. Entrada em uma cidade especifica.
-4. Dossie da cidade com imagens, texto, mapa e fatos criticos.
-5. Leitura por camadas de sistema.
-6. Modo de comparacao entre cidades.
+1. landing page com as tres cidades
+2. entrada em um dossie urbano
+3. mission brief com imagens, texto, fatos criticos e mapa
+4. leitura por camadas padronizadas
+5. compare mode com a mesma camada cruzada entre as tres cidades
 
-Cada camada mistura:
+Cada cidade publica exatamente as mesmas oito camadas:
 
-- frase de estado
-- resumo curto
-- metricas de impacto
-- graficos
-- alerta
-- pergunta investigativa
+- Energy
+- Water
+- Climate
+- Air
+- Waste
+- Mobility
+- Biodiversity
+- Social
 
-O usuario nao recebe uma resposta final. Ele e convidado a montar a propria leitura.
+Isso significa que Aurora agora trabalha com comparabilidade estrutural. Cada cidade sempre traz o mesmo conjunto de eixos, mas com intensidades e narrativas diferentes.
 
 ## 4. Cidades e papeis narrativos
 
 ### Petrolina
 
-Petrolina representa o paradoxo do semi-arido: rio presente, sol abundante e, ainda assim, falha de abastecimento, despejo de esgoto bruto e dependencia de energia fossil.
+Petrolina e lida como um territorio de abundancia desigual. O rio Sao Francisco e o potencial solar existem, mas a cidade ainda convive com pressao em agua, calor, confiabilidade de servico e confianca social.
 
-Eixo central:
+Camadas mais preocupantes:
 
-- Agua e Escassez
-- Energia e Sol
+- Water
+- Climate
+- Social
 
-Pergunta-chave:
+Camada relativamente mais forte:
 
-- Como uma cidade atravessada pelo Sao Francisco normaliza tanta desigualdade de acesso?
+- Mobility
+
+Pergunta central:
+
+- Como uma cidade cercada por agua produtiva e luz solar intensa ainda normaliza perda, desigualdade e baixa confiabilidade?
 
 ### Manaus
 
-Manaus representa a contradicao entre floresta abundante e cidade asfaltada, quente e mal saneada. O foco esta na morte dos igarapes, no aculo de residuos hidricos e nas ilhas de calor.
+Manaus e lida como uma metropole cercada por floresta, mas cada vez mais desconectada da protecao ecologica que deveria ter. O calor, a umidade, os residuos e o ar estagnado dominam a experiencia urbana.
 
-Eixo central:
+Camadas mais preocupantes:
 
-- Ilhas de Calor
-- Residuos Hidricos
+- Climate
+- Air
+- Waste
+- Social
 
-Pergunta-chave:
+Camada relativamente mais forte:
 
-- O que a cidade destruiu no proprio ambiente para ficar tao hostil?
+- Biodiversity
+
+Pergunta central:
+
+- Por que uma cidade com tanta agua e massa florestal produz uma vida urbana tao pesada e pouco respiravel?
 
 ### Pelotas
 
-Pelotas representa o frio vivido como perda economica e risco de saude. O foco esta em vazamento termico, mofo, sobrecarga eletrica e arquitetura despreparada.
+Pelotas e lida como uma cidade onde o frio umido revela falhas de desenho, de eficiencia energetica e de protecao social. O problema nao e apenas o inverno. E o modo como a cidade deixa o corpo exposto a ele.
 
-Eixo central:
+Camadas mais preocupantes:
 
-- Vazamento Termico
-- Pico de Inverno
+- Energy
+- Climate
 
-Pergunta-chave:
+Camadas relativamente mais fortes:
 
-- O frio e o problema principal, ou a casa mal preparada para ele?
+- Water
+- Waste
 
-## 5. Direcao de UX
+Pergunta central:
 
-Aurora Brasil foi refatorado para uma UX mais dura, industrial e inquieta.
+- O frio e o problema, ou a arquitetura, a conta de luz e a desigualdade que transformam o frio em crise cotidiana?
 
-Principios:
+## 5. Modelo de dados atual
 
-- fundo anthracite e superfices escuras
-- vermelho de sinal para estados criticos
-- amber para atencao
-- nada de visual "feliz"
-- brilho pulsante em estados criticos
-- leitura com clima de scanner e sistema sob pressao
-- imagens dessaturadas para destacar desgaste, calor, sujeira e perda
+O modelo ativo esta em:
 
-Interacoes:
+- `src/types/city.ts`
 
-- metricas abrem perguntas investigativas
-- graficos tambem abrem perguntas
-- em Petrolina, o hover nos graficos de agua acende o card do nexo com energia
-- o compare nao tenta harmonizar tudo; ele mostra tambem ausencias e lacunas
-
-## 6. Acessibilidade
-
-Aurora depende de contraste alto e hierarquia visual clara.
-
-As principais decisoes de acessibilidade sao:
-
-- contraste forte entre fundo e texto
-- badges de status com cor e texto
-- descricoes textuais para leitura de valores
-- aria-label nos cards e graficos
-- linguagem curta e direta
-
-## 7. Estrutura de dados atual
-
-O app ativo usa arquivos TypeScript como fonte principal.
-
-Arquivos ativos:
+Cada cidade em:
 
 - `src/data/cities/petrolina.ts`
 - `src/data/cities/manaus.ts`
 - `src/data/cities/pelotas.ts`
-- `src/data/cities/index.ts`
-- `src/types/city.ts`
 
 Cada cidade contem:
 
@@ -150,23 +137,53 @@ Cada cidade contem:
 - `heroImage`
 - `secondaryImage`
 - `mapImage`
+- `breadcrumbLabel`
+- `systemsOverview`
 - `layers`
 
 Cada camada contem:
 
 - `key`
 - `label`
+- `icon`
 - `status`
 - `state`
 - `miniSummary`
 - `summaryStrip`
 - `stats`
 - `charts`
+- `table`
 - `alerts`
 
-## 8. Tipos de grafico usados
+O ponto mais importante da refatoracao atual e este:
 
-Aurora suporta:
+- toda cidade tem o mesmo numero de camadas
+- toda camada usa a mesma estrutura
+- toda camada mistura graficos, tabela e leitura textual
+- toda cidade tem pelo menos uma camada mais forte e camadas preocupantes
+
+## 6. Padrao de visualizacao por camada
+
+Cada camada foi pensada para ser comparavel entre cidades. Por isso a composicao segue uma linguagem fixa:
+
+1. cabecalho da camada com estado, resumo e metricas-resumo
+2. grid de stat cards
+3. quatro graficos com visual consistente
+4. tabela de field notes
+5. alertas
+6. feed social dedicado quando a camada e `Social`
+
+Isso permite ao usuario ler:
+
+- status sintetico
+- dados numericos
+- contraste visual
+- contexto territorial
+- efeito sobre o cotidiano
+
+## 7. Graficos e tabelas
+
+Aurora continua suportando:
 
 - `line`
 - `area`
@@ -177,55 +194,136 @@ Aurora suporta:
 - `progress`
 - `heatmap`
 
-Uso atual por cidade:
-
-- Petrolina usa `donut`, `bar`, `stacked-bar` e `progress`
-- Manaus usa `area`, `heatmap`, `line` e `progress`
-- Pelotas usa `bar`, `radial`, `line` e `donut`
-
-Os graficos nao sao neutros. Eles funcionam como linguagem narrativa:
-
-- `donut` mostra dependencia ou divisao
-- `bar` mostra desigualdade ou contraste direto
-- `line` mostra acumulacao ou escalada
-- `area` mostra peso ambiental
-- `radial` vira leitura de risco
-- `progress` vira alerta simples
-- `heatmap` mostra concentracao de dano
-
-## 9. Arquitetura da interface
-
-### Entrada
-
-- `src/App.tsx`
-- `src/components/LoadingScreen.tsx`
-
-### Navegacao e rotas
-
-- `src/app/router/AppRouter.tsx`
-- `src/pages/LandingPage.tsx`
-- `src/pages/CityPage.tsx`
-- `src/components/navigation/SidebarNav.tsx`
-- `src/components/navigation/CitySwitcher.tsx`
-
-### Conteudo
-
-- `src/components/mission-brief/MissionBriefView.tsx`
-- `src/components/dashboard/SystemLayerView.tsx`
-- `src/components/dashboard/CompareCitiesView.tsx`
-
-### Graficos e estilo
+Renderizacao principal:
 
 - `src/components/charts/ChartRenderer.tsx`
+
+Helpers:
+
+- `src/data/shared/helpers.ts`
+
+Tema visual:
+
 - `src/lib/chartTheme.ts`
+
+Novo padrao de comparabilidade:
+
+- cada camada usa quatro graficos
+- todos os tipos seguem a mesma linguagem visual escura com acentos de alerta
+- toda camada agora tambem possui uma tabela padronizada
+- a tabela vive em `src/components/dashboard/LayerTableCard.tsx`
+
+As tabelas nao servem como planilhas completas. Elas funcionam como notas de campo comparaveis, mostrando zonas, sinais e significado em uma estrutura curta e legivel.
+
+## 8. Social como camada
+
+O projeto agora trata `Social` como uma camada do mesmo nivel das demais, nao apenas como sidebar auxiliar.
+
+Arquivos centrais:
+
+- `src/data/socialPulse.ts`
+- `src/components/dashboard/SocialFeedPanel.tsx`
+- `src/components/dashboard/SocialPulse.tsx`
+
+Existem dois usos:
+
+- `SocialPulse` como feed lateral ao navegar no dossie
+- `SocialFeedPanel` como bloco principal quando o usuario abre a camada `Social`
+
+Isso torna a fala publica parte do modelo investigativo:
+
+- posts mostram onde a pressao vira linguagem cotidiana
+- o feed nao substitui dado tecnico
+- o feed revela confianca, medo, desgaste e repeticao de falhas
+
+## 9. Compare mode
+
+O compare mode foi refeito para trabalhar com o modelo fixo de camadas.
+
+Arquivo principal:
+
+- `src/components/dashboard/CompareCitiesView.tsx`
+
+Agora o usuario:
+
+- escolhe uma camada
+- ve as tres cidades na mesma estrutura
+- cruza as quatro metricas-resumo dessa camada
+- ve uma leitura de severidade compartilhada
+- le as notas de campo das tres cidades lado a lado
+
+Os elementos criativos centrais da comparacao sao:
+
+- `Metric Switchboard`: mostra o mesmo sinal numerico nas tres cidades
+- `Pressure Ladder`: converte status em uma escala unica de severidade
+- `Metric Drift`: acompanha como os mesmos quatro sinais se comportam entre os casos
+- `Field Note Braid`: junta as leituras territoriais locais em um unico quadro
+
+A intencao e que a comparacao pareca uma mesa de investigacao, nao uma tabela burocratica.
+
+## 10. UI e layout
+
+A direcao visual atual prioriza alto contraste e leitura em tablets, especialmente iPad.
+
+Arquivo principal de estilo:
+
 - `src/styles/globals.css`
-- `tailwind.config.ts`
 
-## 10. Como editar o projeto
+Shell e layout:
 
-### Para mudar texto
+- `src/pages/CityPage.tsx`
+- `src/components/navigation/SidebarNav.tsx`
+- `src/components/navigation/TopCityNav.tsx`
 
-Edite diretamente os arquivos de cidade:
+Decisoes principais:
+
+- fundo escuro em `#0D1117`
+- acentos neon de alerta
+- painel esquerdo de icones fixo a partir de telas maiores
+- palco central em bento blocks
+- feed lateral em telas muito largas
+- layout fluido e responsivo sem depender de uma grade rigida unica
+
+Comportamento atual por faixa:
+
+- mobile: drawer lateral
+- iPad e tablet horizontal: painel de icones fixo e conteudo central em blocos bento
+- desktop amplo: painel esquerdo fixo, palco central e Social Pulse lateral
+
+## 11. Assets atuais
+
+O projeto agora usa imagens reais para cada cidade:
+
+- `landscape`
+- `streetview`
+- `map`
+
+Mapeadas em:
+
+- `src/data/shared/assets.ts`
+
+Arquivos atuais:
+
+- `petrolina-landscape.png`
+- `petrolina-streetview.png`
+- `mapa-petrolina.png`
+- `manaus-landscape.png`
+- `manaus-streetview.png`
+- `mapa-manaus.png`
+- `pelotas-landscape.png`
+- `pelotas-streetview.png`
+- `mapa-pelotas.png`
+
+Observacao importante:
+
+- os logos individuais antigos nao estao mais no workspace
+- por isso `project-aurora-logo.svg` esta sendo usado como fallback de logo para as tres cidades
+
+## 12. Como editar o projeto
+
+### Para mudar texto e dados
+
+Edite diretamente:
 
 - `src/data/cities/petrolina.ts`
 - `src/data/cities/manaus.ts`
@@ -233,35 +331,39 @@ Edite diretamente os arquivos de cidade:
 
 Ali vivem:
 
-- descricoes curtas
+- textos curtos
 - mission brief
 - macroStats
-- frases de estado
-- resumos
+- status das camadas
+- metricas-resumo
+- stats
+- graficos
+- tabelas
 - alertas
 
-### Para mudar dados
+### Para mudar tipos de grafico
 
-Edite:
+Altere o `type` e mantenha a estrutura correta:
 
-- `summaryStrip`
-- `stats`
-- `charts`
-
-nos objetos de camada.
-
-### Para mudar tipo de grafico
-
-Troque o `type` e ajuste o formato dos dados.
-
-Regras:
-
-- `line`, `area`, `bar` e `stacked-bar` usam `data` e `series`
+- `line`, `area`, `bar`, `stacked-bar` usam `data` e `series`
 - `donut` usa `segments`
 - `radial` e `progress` usam `value`, `max`, `centerValue` e `centerLabel`
 - `heatmap` usa `rows`
 
-### Para mudar a linguagem visual
+### Para mudar tabelas
+
+Cada camada usa `table`, com:
+
+- `title`
+- `subtitle`
+- `columns`
+- `rows`
+
+As tabelas sao construidas com `makeTable(...)` em:
+
+- `src/data/shared/helpers.ts`
+
+### Para mudar o visual
 
 Edite:
 
@@ -269,25 +371,25 @@ Edite:
 - `src/lib/chartTheme.ts`
 - `tailwind.config.ts`
 
-## 11. Assets atuais
+## 13. Build e observacoes tecnicas
 
-Como esta fase da refatoracao prioriza conceito, leitura critica e coerencia visual, os assets foram trocados por paineis SVG locais com linguagem industrial. Eles funcionam como:
+O build atual funciona.
 
-- logos
-- cenas de contexto
-- mapas esquematicos
+Ponto tecnico ainda relevante:
 
-Isso evita misturar imagens antigas de cidades ficticias com o novo recorte brasileiro.
+- as imagens reais sao pesadas e aumentam o bundle final
 
-## 12. Arquivos legados
+Se a prioridade passar a ser performance, o proximo passo ideal e otimizar os arquivos de imagem.
 
-Ainda existem arquivos legados no repositorio ligados a uma versao anterior do projeto, incluindo um parser CSV antigo.
+## 14. Posicionamento final
 
-O app ativo desta refatoracao nao depende deles para renderizar as paginas atuais. A fonte principal agora esta nos arquivos TypeScript das tres cidades brasileiras.
+Aurora Brasil agora funciona como um sistema comparavel de leitura urbana.
 
-## 13. Posicionamento final
+Ele nao pergunta apenas o que esta ruim. Ele pergunta:
 
-Aurora Brasil e uma experiencia de leitura critica sobre falhas urbanas. Ele nao foi feito para confortar, nem para entregar respostas automaticas. Foi feito para ensinar observacao, confronto e pergunta.
+- o que esta pior?
+- o que ainda funciona?
+- por que funciona melhor em uma cidade do que em outra?
+- qual padrao de falha se repete?
 
-Quando funciona bem, o aluno deixa de olhar para um grafico como decoracao e passa a olhar para ele como pista.
-
+Quando a experiencia funciona bem, o usuario para de olhar para graficos como decoracao e passa a le-los como pistas.

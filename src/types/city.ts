@@ -5,16 +5,14 @@ export type SystemStatus = "critical" | "attention" | "nominal";
 export type LayerKey =
   | "mission-brief"
   | "compare-cities"
-  | "temperature"
-  | "water"
-  | "air"
-  | "sun"
-  | "wind"
   | "energy"
+  | "water"
+  | "climate"
+  | "air"
   | "waste"
-  | "housing"
-  | "transportation"
-  | "biodiversity";
+  | "mobility"
+  | "biodiversity"
+  | "social";
 
 export type ChartType = "line" | "area" | "bar" | "stacked-bar" | "donut" | "radial" | "progress" | "heatmap";
 
@@ -50,6 +48,17 @@ export interface HeatmapCell {
   value: number;
 }
 
+export interface LayerTable {
+  title: string;
+  subtitle?: string;
+  columns: [string, string, string];
+  rows: Array<{
+    label: string;
+    value: string;
+    note: string;
+  }>;
+}
+
 export interface ChartSpec {
   type: ChartType;
   title: string;
@@ -77,6 +86,7 @@ export interface SystemLayer {
   stats: SystemStat[];
   summaryStrip: SummaryMetric[];
   charts: ChartSpec[];
+  table: LayerTable;
   alerts?: AlertItem[];
   zoneComparison?: SummaryMetric[];
 }

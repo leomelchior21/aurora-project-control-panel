@@ -1,4 +1,4 @@
-import type { AlertItem, ChartSpec, SummaryMetric, SystemLayer, SystemStatus } from "../../types/city";
+import type { AlertItem, ChartSpec, LayerTable, SummaryMetric, SystemLayer, SystemStatus } from "../../types/city";
 
 export const statusOrder: SystemStatus[] = ["critical", "attention", "nominal"];
 
@@ -44,5 +44,14 @@ export function donutChart(title: string, subtitle: string, segments: SummaryMet
     segments,
     centerValue,
     centerLabel,
+  };
+}
+
+export function makeTable(title: string, subtitle: string, rows: LayerTable["rows"]): LayerTable {
+  return {
+    title,
+    subtitle,
+    columns: ["Zone", "Signal", "Meaning"],
+    rows,
   };
 }

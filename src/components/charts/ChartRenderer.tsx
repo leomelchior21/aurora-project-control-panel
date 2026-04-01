@@ -57,16 +57,20 @@ function getChartQuestion(chart: ChartSpec) {
     return "Where did this system fail before water started carrying this much pressure?";
   }
 
-  if (/energy|solar|grid|cost|demand|peak|lighting/.test(normalized)) {
+  if (/energy|solar|grid|cost|demand|peak|lighting|supply/.test(normalized)) {
     return "Which hidden dependency keeps this system locked into high cost or dirty supply?";
   }
 
-  if (/heat|temperature|humidity|mold|air/.test(normalized)) {
+  if (/heat|temperature|humidity|mold|air|climate/.test(normalized)) {
     return "What makes the body feel even more pressure than the headline number already shows?";
   }
 
   if (/waste|plastic|collection|dumping/.test(normalized)) {
     return "When this volume grows, which other system begins to fail with it?";
+  }
+
+  if (/trust|complaint|response|topic split/.test(normalized)) {
+    return "What does public speech reveal here that official averages usually hide?";
   }
 
   return "What hidden dependency does this chart suggest without saying it directly?";

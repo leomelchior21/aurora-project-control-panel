@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Thermometer, Droplets, Wind, Sun, Zap, Trash2, Building2, TramFront, Trees, PanelsTopLeft } from "lucide-react";
+import { Home, Zap, Droplets, CloudSun, Wind, Trash2, TramFront, Trees, MessageSquareText, PanelsTopLeft } from "lucide-react";
 import type { LayerKey, SystemStatus } from "../../types/city";
 import { cn } from "../../lib/utils";
 import { PulseIndicator } from "../ui/PulseIndicator";
@@ -7,16 +7,14 @@ import { PulseIndicator } from "../ui/PulseIndicator";
 const iconMap = {
   "mission-brief": Home,
   "compare-cities": PanelsTopLeft,
-  temperature: Thermometer,
-  water: Droplets,
-  air: Wind,
-  sun: Sun,
-  wind: Wind,
   energy: Zap,
+  water: Droplets,
+  climate: CloudSun,
+  air: Wind,
   waste: Trash2,
-  housing: Building2,
-  transportation: TramFront,
+  mobility: TramFront,
   biodiversity: Trees,
+  social: MessageSquareText,
 } as const;
 
 export function LayerNavItem({
@@ -52,7 +50,7 @@ export function LayerNavItem({
           : "border-transparent text-slate-300 hover:border-white/10 hover:bg-white/[0.04]",
       )}
     >
-      <div className={cn("flex items-center justify-center rounded-2xl border border-white/10 bg-black/20", compact ? "h-10 w-10" : "h-10 w-10")}>
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/20">
         <Icon className="h-4.5 w-4.5" />
       </div>
       {!compact ? (

@@ -45,7 +45,7 @@ export function CityPage() {
   return (
     <div className="min-h-screen px-3 py-3 md:px-4">
       <div className="mx-auto max-w-[1680px]">
-        <div className="mb-3 flex items-center justify-between gap-3 xl:hidden">
+        <div className="mb-3 flex items-center justify-between gap-3 lg:hidden">
           <button onClick={() => setNavOpen(true)} className="aurora-panel flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 text-white">
             <Menu className="h-5 w-5" />
           </button>
@@ -58,14 +58,14 @@ export function CityPage() {
         <div className="space-y-4">
           <TopCityNav city={city} activeLayer={activeLayer} onSelectCity={handleSelectCity} onSelectLayer={handleSelectLayer} />
 
-          <div className="grid gap-4 xl:grid-cols-[88px_minmax(0,1fr)_320px]">
-            <div className="hidden xl:block">
+          <div className="grid gap-4 lg:grid-cols-[88px_minmax(0,1fr)] 2xl:grid-cols-[88px_minmax(0,1fr)_320px]">
+            <div className="hidden lg:block">
               <SidebarNav city={city} activeLayer={activeLayer} onSelectLayer={handleSelectLayer} onSelectCity={handleSelectCity} compact />
             </div>
 
             <AnimatePresence>
               {navOpen ? (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm xl:hidden">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden">
                   <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -24, opacity: 0 }} className="h-full w-[min(88vw,340px)] p-3">
                     <div className="mb-3 flex justify-end">
                       <button onClick={() => setNavOpen(false)} className="aurora-panel flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 text-white">
