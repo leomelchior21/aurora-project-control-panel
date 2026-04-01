@@ -279,7 +279,13 @@ Decisoes principais:
 
 - fundo escuro em `#0D1117`
 - acentos neon de alerta
+- gradiente de fundo contextual por cidade, com linguagem mais polida e cinematica
+- Petrolina usa gradiente vermelho quente
+- Manaus usa gradiente verde profundo
+- Pelotas usa gradiente azul frio
+- Compare mode usa gradiente roxo
 - painel esquerdo de icones fixo a partir de telas maiores
+- header superior fixo durante o scroll
 - palco central em bento blocks
 - feed lateral em telas muito largas
 - layout fluido e responsivo sem depender de uma grade rigida unica
@@ -287,8 +293,14 @@ Decisoes principais:
 Comportamento atual por faixa:
 
 - mobile: drawer lateral
-- iPad e tablet horizontal: painel de icones fixo e conteudo central em blocos bento
+- iPad e tablet horizontal: painel de icones fixo, header fixo e conteudo central em blocos bento
 - desktop amplo: painel esquerdo fixo, palco central e Social Pulse lateral
+
+Leitura visual de status:
+
+- `Critical` continua em vermelho
+- `Attention` continua em amber
+- `Stable` agora aparece em verde
 
 ## 11. Assets atuais
 

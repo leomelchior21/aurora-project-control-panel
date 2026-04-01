@@ -23,7 +23,8 @@ export function MissionBriefView({ city }: { city: CityData }) {
             </span>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0D1117] via-[#0D1117]/70 to-transparent px-6 py-5">
               <p className="text-[10px] uppercase tracking-[0.28em] text-amber-300">Stage under pressure</p>
-              <p className="mt-2 max-w-2xl text-sm text-slate-200">Read the territory before the metrics. The scene already signals inequality, wear, and risk.</p>
+              <h3 className="mt-3 font-headline text-[clamp(2.6rem,6vw,5rem)] leading-none text-white">{city.name}</h3>
+              <p className="mt-3 max-w-2xl text-sm text-slate-200">Read the territory before the metrics. The scene already signals inequality, wear, and risk.</p>
             </div>
           </button>
 

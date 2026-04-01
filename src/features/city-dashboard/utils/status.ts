@@ -7,7 +7,7 @@ export function getStatusColor(status: SystemStatus) {
     case "attention":
       return "#FFBF00";
     default:
-      return "#8D98A8";
+      return "#3DDC84";
   }
 }
 

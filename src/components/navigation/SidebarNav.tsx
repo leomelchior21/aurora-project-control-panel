@@ -35,7 +35,7 @@ export function SidebarNav({
     <aside
       className={
         compact
-          ? "aurora-panel icon-tray lg:sticky lg:top-3 flex h-fit flex-col items-center gap-3 rounded-[28px] border border-white/10 p-3"
+          ? "aurora-panel icon-tray lg:sticky lg:top-[104px] flex h-fit flex-col items-center gap-3 rounded-[28px] border border-white/10 p-3"
           : "aurora-panel flex h-full flex-col gap-4 rounded-[30px] border border-white/10 p-4"
       }
     >

@@ -37,6 +37,64 @@ body {
   min-height: 100vh;
 }
 
+.city-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.city-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.08), transparent 18%),
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.05), transparent 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 34%);
+}
+
+.city-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+
+.aurora-bg-petrolina::after {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(255, 92, 30, 0.34), transparent 24%),
+    radial-gradient(circle at 84% 22%, rgba(255, 37, 37, 0.22), transparent 20%),
+    radial-gradient(circle at 56% 82%, rgba(255, 191, 0, 0.16), transparent 24%),
+    linear-gradient(160deg, #140d0a 0%, #0d1117 46%, #120d0a 100%);
+}
+
+.aurora-bg-manaus::after {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(38, 211, 124, 0.28), transparent 24%),
+    radial-gradient(circle at 82% 22%, rgba(0, 166, 107, 0.22), transparent 22%),
+    radial-gradient(circle at 56% 82%, rgba(120, 255, 198, 0.12), transparent 24%),
+    linear-gradient(160deg, #09130f 0%, #0d1117 46%, #08100d 100%);
+}
+
+.aurora-bg-pelotas::after {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(91, 168, 255, 0.3), transparent 24%),
+    radial-gradient(circle at 82% 22%, rgba(61, 130, 255, 0.18), transparent 22%),
+    radial-gradient(circle at 56% 82%, rgba(171, 209, 255, 0.14), transparent 24%),
+    linear-gradient(160deg, #0a1018 0%, #0d1117 46%, #0a0f18 100%);
+}
+
+.aurora-bg-compare::after {
+  background:
+    radial-gradient(circle at 14% 16%, rgba(150, 98, 255, 0.28), transparent 24%),
+    radial-gradient(circle at 82% 22%, rgba(113, 70, 255, 0.22), transparent 22%),
+    radial-gradient(circle at 56% 82%, rgba(210, 140, 255, 0.12), transparent 24%),
+    linear-gradient(160deg, #100b17 0%, #0d1117 46%, #140b19 100%);
+}
+
 .aurora-panel {
   position: relative;
   overflow: hidden;

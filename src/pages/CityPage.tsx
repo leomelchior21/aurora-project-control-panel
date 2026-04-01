@@ -42,8 +42,17 @@ export function CityPage() {
     setNavOpen(false);
   };
 
+  const backgroundClass =
+    activeLayer === "compare-cities"
+      ? "aurora-bg-compare"
+      : city.slug === "petrolina"
+        ? "aurora-bg-petrolina"
+        : city.slug === "manaus"
+          ? "aurora-bg-manaus"
+          : "aurora-bg-pelotas";
+
   return (
-    <div className="min-h-screen px-3 py-3 md:px-4">
+    <div className={cn("city-shell min-h-screen px-3 py-3 md:px-4", backgroundClass)}>
       <div className="mx-auto max-w-[1680px]">
         <div className="mb-3 flex items-center justify-between gap-3 lg:hidden">
           <button onClick={() => setNavOpen(true)} className="aurora-panel flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 text-white">
